@@ -2,7 +2,7 @@ from enum import Enum
 
 from sqlalchemy import Column, Date, Enum as SqlEnum, Float, Integer, String
 
-from database.database import Base
+from core.database import Base
 
 
 class DemandaStatus(str, Enum):

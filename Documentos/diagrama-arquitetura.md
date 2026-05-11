@@ -14,7 +14,7 @@ flowchart TD
     PA -- "REST / HTTP+JSON" --> API
     API -- "SQL via SQLAlchemy" --> DB
     API -. "Publish eventos" .-> MOM
-    MOM -. "Notificacao assincrona" .-> PA
+    MOM -. "Notificação assíncrona" .-> PA
 ```
 
 ### Camadas Internas do Backend
@@ -22,14 +22,16 @@ flowchart TD
 ```mermaid
 flowchart TD
     ROUTER["api/ - Routers e Controllers"]
-    SERVICE["services/ - Logica de Negocio"]
+    SERVICE["services/ - Lógica de Negócio"]
+    REPO["repositories/ - Acesso a Dados"]
     MODEL["models/ - SQLAlchemy ORM"]
-    SCHEMA["schemas/ - Validacao Pydantic"]
-    INFRA["core/ + database/ - Config e Sessao DB"]
+    SCHEMA["schemas/ - Validação Pydantic"]
+    INFRA["core/ + database/ - Config e Sessão DB"]
 
     ROUTER --> SERVICE
-    SERVICE --> MODEL
+    SERVICE --> REPO
     SERVICE --> SCHEMA
+    REPO --> MODEL
     MODEL --> INFRA
     SCHEMA --> INFRA
 ```

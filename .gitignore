@@ -1,2 +1,25 @@
+# Ambiente
 .env
 .DS_Store
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Flutter
+codigo/Mobile/field_flow/.dart_tool/
+codigo/Mobile/field_flow/build/
+codigo/Mobile/field_flow/.flutter-plugins
+codigo/Mobile/field_flow/.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml

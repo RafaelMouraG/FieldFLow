@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from database.database import get_db
-from schemas.demanda import DemandaCreate, DemandaResponse, DemandaStatusUpdate
-from services.demanda_service import (
+from core.database import get_db
+from demandas.schemas import DemandaCreate, DemandaResponse, DemandaStatusUpdate
+from demandas.service import (
     create_demanda,
     delete_demanda,
     get_demanda,

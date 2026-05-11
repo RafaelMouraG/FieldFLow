@@ -1,0 +1,187 @@
+{
+  "info": {
+    "name": "FieldFlow API",
+    "description": "Coleção de testes para a API REST do FieldFlow — marketplace de serviços agrícolas. Sprint 1.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health",
+        "description": "Verifica se a API está operacional."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"status\": \"ok\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Criar Demanda",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/demandas",
+        "description": "Cria uma nova demanda de serviço agrícola. O status inicial é sempre PENDENTE.",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente_id\": 1,\n  \"titulo\": \"Pulverizacao de soja - Talhao 3\",\n  \"descricao\": \"Aplicacao de fungicida em 45 hectares de soja no estagio R3. Necessario equipamento de barra larga.\",\n  \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n  \"destino\": null,\n  \"area_hectares\": 45.0,\n  \"valor_recompensa\": 3200.00,\n  \"tipo_servico\": \"Pulverizacao\",\n  \"data_limite\": \"2026-05-20\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "response": [
+        {
+          "name": "201 Created",
+          "status": "Created",
+          "code": 201,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"id\": 1,\n  \"cliente_id\": 1,\n  \"prestador_id\": null,\n  \"titulo\": \"Pulverizacao de soja - Talhao 3\",\n  \"descricao\": \"Aplicacao de fungicida em 45 hectares de soja no estagio R3. Necessario equipamento de barra larga.\",\n  \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n  \"destino\": null,\n  \"area_hectares\": 45.0,\n  \"valor_recompensa\": 3200.00,\n  \"tipo_servico\": \"Pulverizacao\",\n  \"data_limite\": \"2026-05-20\",\n  \"status\": \"PENDENTE\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Listar Demandas",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/demandas",
+        "description": "Retorna todas as demandas cadastradas, ordenadas por ID."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "[\n  {\n    \"id\": 1,\n    \"cliente_id\": 1,\n    \"prestador_id\": null,\n    \"titulo\": \"Pulverizacao de soja - Talhao 3\",\n    \"descricao\": \"Aplicacao de fungicida em 45 hectares de soja no estagio R3. Necessario equipamento de barra larga.\",\n    \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n    \"destino\": null,\n    \"area_hectares\": 45.0,\n    \"valor_recompensa\": 3200.00,\n    \"tipo_servico\": \"Pulverizacao\",\n    \"data_limite\": \"2026-05-20\",\n    \"status\": \"PENDENTE\"\n  },\n  {\n    \"id\": 2,\n    \"cliente_id\": 3,\n    \"prestador_id\": 7,\n    \"titulo\": \"Colheita de milho - Area Norte\",\n    \"descricao\": \"Colheita mecanizada de milho em 120 hectares. Umidade do grao abaixo de 14%.\",\n    \"origem\": \"Fazenda Boa Esperanca, Zona Rural, Primavera do Leste - MT\",\n    \"destino\": \"Armazem Cooperativa, Rod. MT-130 km 8\",\n    \"area_hectares\": 120.0,\n    \"valor_recompensa\": 9600.00,\n    \"tipo_servico\": \"Colheita\",\n    \"data_limite\": \"2026-05-25\",\n    \"status\": \"ACEITO\"\n  }\n]"
+        }
+      ]
+    },
+    {
+      "name": "Buscar Demanda por ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/demandas/1",
+        "description": "Retorna os detalhes de uma demanda específica pelo seu ID."
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"id\": 1,\n  \"cliente_id\": 1,\n  \"prestador_id\": null,\n  \"titulo\": \"Pulverizacao de soja - Talhao 3\",\n  \"descricao\": \"Aplicacao de fungicida em 45 hectares de soja no estagio R3. Necessario equipamento de barra larga.\",\n  \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n  \"destino\": null,\n  \"area_hectares\": 45.0,\n  \"valor_recompensa\": 3200.00,\n  \"tipo_servico\": \"Pulverizacao\",\n  \"data_limite\": \"2026-05-20\",\n  \"status\": \"PENDENTE\"\n}"
+        },
+        {
+          "name": "404 Not Found",
+          "status": "Not Found",
+          "code": 404,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"detail\": \"Demanda nao encontrada\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Atualizar Status da Demanda",
+      "request": {
+        "method": "PATCH",
+        "url": "{{base_url}}/demandas/1/status",
+        "description": "Atualiza o status de uma demanda. Ao aceitar (ACEITO), o prestador informa seu ID. Fluxo: PENDENTE → ACEITO → EM_EXECUCAO → CONCLUIDO.",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"ACEITO\",\n  \"prestador_id\": 7\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "response": [
+        {
+          "name": "200 OK - Aceito",
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"id\": 1,\n  \"cliente_id\": 1,\n  \"prestador_id\": 7,\n  \"titulo\": \"Pulverizacao de soja - Talhao 3\",\n  \"descricao\": \"Aplicacao de fungicida em 45 hectares de soja no estagio R3. Necessario equipamento de barra larga.\",\n  \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n  \"destino\": null,\n  \"area_hectares\": 45.0,\n  \"valor_recompensa\": 3200.00,\n  \"tipo_servico\": \"Pulverizacao\",\n  \"data_limite\": \"2026-05-20\",\n  \"status\": \"ACEITO\"\n}"
+        },
+        {
+          "name": "200 OK - Concluido",
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"id\": 1,\n  \"cliente_id\": 1,\n  \"prestador_id\": 7,\n  \"titulo\": \"Pulverizacao de soja - Talhao 3\",\n  \"descricao\": \"Aplicacao de fungicida em 45 hectares de soja no estagio R3. Necessario equipamento de barra larga.\",\n  \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n  \"destino\": null,\n  \"area_hectares\": 45.0,\n  \"valor_recompensa\": 3200.00,\n  \"tipo_servico\": \"Pulverizacao\",\n  \"data_limite\": \"2026-05-20\",\n  \"status\": \"CONCLUIDO\"\n}"
+        },
+        {
+          "name": "404 Not Found",
+          "status": "Not Found",
+          "code": 404,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"detail\": \"Demanda nao encontrada\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Atualizar Demanda Completa",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/demandas/1",
+        "description": "Substitui todos os dados de uma demanda (exceto status e prestador_id). Usado para correções antes do aceite.",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente_id\": 1,\n  \"titulo\": \"Pulverizacao de soja - Talhao 3 e 4\",\n  \"descricao\": \"Aplicacao de fungicida em 90 hectares de soja no estagio R3. Necessario equipamento de barra larga. Area ampliada para incluir talhao 4.\",\n  \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n  \"destino\": null,\n  \"area_hectares\": 90.0,\n  \"valor_recompensa\": 6400.00,\n  \"tipo_servico\": \"Pulverizacao\",\n  \"data_limite\": \"2026-05-22\"\n}",
+          "options": { "raw": { "language": "json" } }
+        }
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"id\": 1,\n  \"cliente_id\": 1,\n  \"prestador_id\": null,\n  \"titulo\": \"Pulverizacao de soja - Talhao 3 e 4\",\n  \"descricao\": \"Aplicacao de fungicida em 90 hectares de soja no estagio R3. Necessario equipamento de barra larga. Area ampliada para incluir talhao 4.\",\n  \"origem\": \"Fazenda Santa Cruz, Rod. BR-163 km 45, Sorriso - MT\",\n  \"destino\": null,\n  \"area_hectares\": 90.0,\n  \"valor_recompensa\": 6400.00,\n  \"tipo_servico\": \"Pulverizacao\",\n  \"data_limite\": \"2026-05-22\",\n  \"status\": \"PENDENTE\"\n}"
+        },
+        {
+          "name": "404 Not Found",
+          "status": "Not Found",
+          "code": 404,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"detail\": \"Demanda nao encontrada\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Deletar Demanda",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/demandas/1",
+        "description": "Remove uma demanda permanentemente pelo ID."
+      },
+      "response": [
+        {
+          "name": "204 No Content",
+          "status": "No Content",
+          "code": 204,
+          "body": ""
+        },
+        {
+          "name": "404 Not Found",
+          "status": "Not Found",
+          "code": 404,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"detail\": \"Demanda nao encontrada\"\n}"
+        }
+      ]
+    }
+  ]
+}

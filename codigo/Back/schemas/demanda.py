@@ -7,6 +7,7 @@ from models.demanda import DemandaStatus
 
 
 class DemandaBase(BaseModel):
+    cliente_id: int
     titulo: str
     descricao: str
     origem: str
@@ -24,9 +25,11 @@ class DemandaCreate(DemandaBase):
 class DemandaResponse(DemandaBase):
     id: int
     status: DemandaStatus
+    prestador_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class DemandaStatusUpdate(BaseModel):
     status: DemandaStatus
+    prestador_id: Optional[int] = None

@@ -5,8 +5,10 @@ from database.database import get_db
 from schemas.demanda import DemandaCreate, DemandaResponse, DemandaStatusUpdate
 from services.demanda_service import (
     create_demanda,
+    delete_demanda,
     get_demanda,
     list_demandas,
+    update_demanda,
     update_demanda_status,
 )
 
@@ -35,7 +37,24 @@ def obter_demanda(demanda_id: int, db: Session = Depends(get_db)):
 def atualizar_status(
     demanda_id: int, payload: DemandaStatusUpdate, db: Session = Depends(get_db)
 ):
-    demanda = update_demanda_status(db, demanda_id, payload.status)
+    demanda = update_demanda_status(db, demanda_id, payload.status, payload.prestador_id)
     if not demanda:
         raise HTTPException(status_code=404, detail="Demanda nao encontrada")
     return demanda
+
+
+@router.put("/{demanda_id}", response_model=DemandaResponse)
+def atualizar_demanda(
+    demanda_id: int, payload: DemandaCreate, db: Session = Depends(get_db)
+):
+    demanda = update_demanda(db, demanda_id, payload)
+    if not demanda:
+        raise HTTPException(status_code=404, detail="Demanda nao encontrada")
+    return demanda
+
+
+@router.delete("/{demanda_id}", status_code=status.HTTP_204_NO_CONTENT)
+def deletar_demanda(demanda_id: int, db: Session = Depends(get_db)):
+    sucesso = delete_demanda(db, demanda_id)
+    if not sucesso:
+        raise HTTPException(status_code=404, detail="Demanda nao encontrada")

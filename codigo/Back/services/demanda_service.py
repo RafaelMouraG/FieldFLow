@@ -21,12 +21,39 @@ def get_demanda(db: Session, demanda_id: int) -> Demanda | None:
 
 
 def update_demanda_status(
-    db: Session, demanda_id: int, status: DemandaStatus
+    db: Session, demanda_id: int, status: DemandaStatus, prestador_id: int | None = None
 ) -> Demanda | None:
     demanda = get_demanda(db, demanda_id)
     if not demanda:
         return None
     demanda.status = status
+    if prestador_id is not None:
+        demanda.prestador_id = prestador_id
     db.commit()
     db.refresh(demanda)
     return demanda
+
+
+def update_demanda(
+    db: Session, demanda_id: int, payload: DemandaCreate
+) -> Demanda | None:
+    demanda = get_demanda(db, demanda_id)
+    if not demanda:
+        return None
+    
+    for key, value in payload.model_dump().items():
+        setattr(demanda, key, value)
+        
+    db.commit()
+    db.refresh(demanda)
+    return demanda
+
+
+def delete_demanda(db: Session, demanda_id: int) -> bool:
+    demanda = get_demanda(db, demanda_id)
+    if not demanda:
+        return False
+        
+    db.delete(demanda)
+    db.commit()
+    return True

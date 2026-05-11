@@ -16,6 +16,8 @@ class Demanda(Base):
     __tablename__ = "demandas"
 
     id = Column(Integer, primary_key=True, index=True)
+    cliente_id = Column(Integer, nullable=False, index=True)
+    prestador_id = Column(Integer, nullable=True, index=True)
     titulo = Column(String, nullable=False)
     descricao = Column(String, nullable=False)
     origem = Column(String, nullable=False)

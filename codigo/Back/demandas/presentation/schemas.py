@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from demandas.model import DemandaStatus
+from demandas.domain.entities import DemandaStatus
 
 
 class DemandaBase(BaseModel):

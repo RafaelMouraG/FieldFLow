@@ -3,4 +3,6 @@ uvicorn
 sqlalchemy
 psycopg2-binary
 pydantic-settings
+pydantic[email]
 python-multipart
+pika

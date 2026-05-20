@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from demandas.model import Demanda
+from demandas.infrastructure.database.models import Demanda
 
 
 def get_by_id(db: Session, demanda_id: int) -> Demanda | None:

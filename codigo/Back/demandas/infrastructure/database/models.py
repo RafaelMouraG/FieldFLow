@@ -1,15 +1,7 @@
-from enum import Enum
-
 from sqlalchemy import Column, Date, Enum as SqlEnum, Float, Integer, String
 
 from core.database import Base
-
-
-class DemandaStatus(str, Enum):
-    PENDENTE = "PENDENTE"
-    ACEITO = "ACEITO"
-    EM_EXECUCAO = "EM_EXECUCAO"
-    CONCLUIDO = "CONCLUIDO"
+from demandas.domain.entities import DemandaStatus
 
 
 class Demanda(Base):

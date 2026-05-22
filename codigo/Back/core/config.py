@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     rabbitmq_url: str | None = Field(default=None, alias="RABBITMQ_URL")
     mom_exchange: str = Field(default="fieldflow.events", alias="MOM_EXCHANGE")
 
+    jwt_secret: str = Field(alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_expires_minutes: int = Field(default=60 * 24, alias="JWT_EXPIRES_MINUTES")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,

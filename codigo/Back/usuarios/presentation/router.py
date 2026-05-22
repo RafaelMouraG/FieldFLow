@@ -1,19 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from auth.dependencies import get_current_user
 from core.database import get_db
 from mom.dependencies import get_event_publisher
 from mom.interface import EventPublisher
 from usuarios.application.use_cases import (
-    create_usuario,
     delete_usuario,
     get_usuario,
-    get_usuario_por_email,
-    list_usuarios,
     update_usuario,
 )
+from usuarios.infrastructure.database.models import Usuario
 from usuarios.presentation.schemas import (
-    UsuarioCreate,
+    UsuarioPublicResponse,
     UsuarioResponse,
     UsuarioUpdate,
 )
@@ -21,24 +20,12 @@ from usuarios.presentation.schemas import (
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
 
-@router.post("", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
-def criar_usuario(
-    payload: UsuarioCreate,
+@router.get("/{usuario_id}", response_model=UsuarioPublicResponse)
+def obter_usuario(
+    usuario_id: int,
     db: Session = Depends(get_db),
-    publisher: EventPublisher = Depends(get_event_publisher),
+    current_user: Usuario = Depends(get_current_user),  # noqa: ARG001
 ):
-    if get_usuario_por_email(db, payload.email):
-        raise HTTPException(status_code=409, detail="Email ja cadastrado")
-    return create_usuario(db, payload, publisher)
-
-
-@router.get("", response_model=list[UsuarioResponse])
-def listar_usuarios(db: Session = Depends(get_db)):
-    return list_usuarios(db)
-
-
-@router.get("/{usuario_id}", response_model=UsuarioResponse)
-def obter_usuario(usuario_id: int, db: Session = Depends(get_db)):
     usuario = get_usuario(db, usuario_id)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario nao encontrado")
@@ -51,7 +38,13 @@ def atualizar_usuario(
     payload: UsuarioUpdate,
     db: Session = Depends(get_db),
     publisher: EventPublisher = Depends(get_event_publisher),
+    current_user: Usuario = Depends(get_current_user),
 ):
+    if current_user.id != usuario_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Voce so pode editar o proprio usuario",
+        )
     usuario = update_usuario(db, usuario_id, payload, publisher)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario nao encontrado")
@@ -63,7 +56,13 @@ def deletar_usuario(
     usuario_id: int,
     db: Session = Depends(get_db),
     publisher: EventPublisher = Depends(get_event_publisher),
+    current_user: Usuario = Depends(get_current_user),
 ):
+    if current_user.id != usuario_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Voce so pode remover o proprio usuario",
+        )
     sucesso = delete_usuario(db, usuario_id, publisher)
     if not sucesso:
         raise HTTPException(status_code=404, detail="Usuario nao encontrado")

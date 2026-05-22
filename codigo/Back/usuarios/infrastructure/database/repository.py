@@ -11,6 +11,10 @@ def get_by_email(db: Session, email: str) -> Usuario | None:
     return db.query(Usuario).filter(Usuario.email == email).first()
 
 
+def get_by_documento(db: Session, documento: str) -> Usuario | None:
+    return db.query(Usuario).filter(Usuario.documento == documento).first()
+
+
 def get_all(db: Session) -> list[Usuario]:
     return db.query(Usuario).order_by(Usuario.id).all()
 
@@ -20,8 +24,3 @@ def save(db: Session, usuario: Usuario) -> Usuario:
     db.commit()
     db.refresh(usuario)
     return usuario
-
-
-def delete(db: Session, usuario: Usuario) -> None:
-    db.delete(usuario)
-    db.commit()

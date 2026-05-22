@@ -44,6 +44,19 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  worker:
+    build:
+      context: ../codigo/Back
+    container_name: fieldflow_worker
+    command: ["python", "-m", "worker"]
+    env_file:
+      - ../.env
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   rabbitmq_data:

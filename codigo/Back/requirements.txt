@@ -6,3 +6,6 @@ pydantic-settings
 pydantic[email]
 python-multipart
 pika
+bcrypt
+pyjwt
+pytest

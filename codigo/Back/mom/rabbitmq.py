@@ -30,7 +30,9 @@ class RabbitMQEventPublisher(EventPublisher):
         )
         return self._channel
 
-    def publish(self, event_type: str, payload: dict[str, Any]) -> None:
+    def _do_publish(
+        self, event_type: str, payload: dict[str, Any], event_id: str
+    ) -> None:
         body = json.dumps(payload, default=str).encode("utf-8")
         try:
             channel = self._ensure_channel()
@@ -41,9 +43,12 @@ class RabbitMQEventPublisher(EventPublisher):
                 properties=pika.BasicProperties(
                     content_type="application/json",
                     delivery_mode=2,
+                    message_id=event_id,
                 ),
             )
-            logger.info("[MOM] published event=%s", event_type)
+            logger.info(
+                "[MOM] published event=%s id=%s", event_type, event_id
+            )
         except AMQPError as exc:
             logger.error("[MOM] falha ao publicar %s: %s", event_type, exc)
             self.close()

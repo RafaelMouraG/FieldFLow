@@ -1,0 +1,20 @@
+fieldflow_worker  | 2026-05-21 20:11:59,191 INFO worker.consumer [worker] consumindo exchange=fieldflow.events queue=fieldflow.notificacoes bindings=['demanda.#', 'usuario.#', 'prestador.#', 'candidatura.#'] dlq=fieldflow.notificacoes.dlq
+fieldflow_worker  | 2026-05-21 20:12:07,067 INFO worker.handlers [worker] gravou notificacao id=1 event_id=ade1a520-6a08-415b-bd04-c42ec18feecb routing_key=usuario.criado
+fieldflow_worker  | 2026-05-21 20:12:07,313 INFO worker.handlers [worker] gravou notificacao id=2 event_id=d7f44451-ba95-4f57-b5a0-c3179a6564f2 routing_key=usuario.criado
+fieldflow_worker  | 2026-05-21 20:12:07,558 INFO worker.handlers [worker] gravou notificacao id=3 event_id=b2630106-1d33-4ea1-a4d2-1198204ea242 routing_key=usuario.criado
+fieldflow_worker  | 2026-05-21 20:12:07,621 INFO worker.handlers [worker] gravou notificacao id=4 event_id=17abe952-6b1b-4e80-aae5-dc45cab1b0d4 routing_key=prestador.perfil.enviado
+fieldflow_worker  | 2026-05-21 20:12:07,628 INFO mom.rabbitmq [MOM] published event=prestador.aprovado id=cf4ca04d-7004-4c98-b8d0-fc165b0c1162
+fieldflow_worker  | 2026-05-21 20:12:07,628 INFO worker.handlers [worker] perfil usuario=2 APROVADO
+fieldflow_worker  | 2026-05-21 20:12:07,630 INFO worker.handlers [worker] gravou notificacao id=5 event_id=cf4ca04d-7004-4c98-b8d0-fc165b0c1162 routing_key=prestador.aprovado
+fieldflow_worker  | 2026-05-21 20:12:07,634 INFO worker.handlers [worker] gravou notificacao id=6 event_id=17c83278-22b4-4485-80b5-c18a722f6057 routing_key=prestador.perfil.enviado
+fieldflow_worker  | 2026-05-21 20:12:07,636 INFO mom.rabbitmq [MOM] published event=prestador.aprovado id=0bada54a-587a-45cd-9b51-494f46fd58b5
+fieldflow_worker  | 2026-05-21 20:12:07,636 INFO worker.handlers [worker] perfil usuario=3 APROVADO
+fieldflow_worker  | 2026-05-21 20:12:07,637 INFO worker.handlers [worker] gravou notificacao id=7 event_id=0bada54a-587a-45cd-9b51-494f46fd58b5 routing_key=prestador.aprovado
+fieldflow_worker  | 2026-05-21 20:12:10,675 INFO worker.handlers [worker] gravou notificacao id=8 event_id=93e610f7-c06f-48dd-8dc1-c6f061af959a routing_key=demanda.criada
+fieldflow_worker  | 2026-05-21 20:12:10,749 INFO worker.handlers [worker] gravou notificacao id=9 event_id=138df7ad-f0b5-4dc9-82c3-5bb4315872cb routing_key=candidatura.criada
+fieldflow_worker  | 2026-05-21 20:12:10,806 INFO worker.handlers [worker] gravou notificacao id=10 event_id=2d8ed004-0a99-46a2-b2a4-1925ba9900c4 routing_key=candidatura.criada
+fieldflow_worker  | 2026-05-21 20:12:10,839 INFO worker.handlers [worker] gravou notificacao id=11 event_id=8888c405-52a2-49ab-8447-c6ee548bfc28 routing_key=candidatura.aceita
+fieldflow_worker  | 2026-05-21 20:12:10,846 INFO mom.rabbitmq [MOM] published event=candidatura.rejeitada id=584d5758-d163-40db-aaf2-f208ff9c7253
+fieldflow_worker  | 2026-05-21 20:12:10,846 INFO worker.handlers [worker] rejeitou 1 candidatura(s) concorrente(s) da demanda 1
+fieldflow_worker  | 2026-05-21 20:12:10,849 INFO worker.handlers [worker] gravou notificacao id=12 event_id=11d60621-f6a4-41f8-8cd8-e24c1ab5c9b4 routing_key=demanda.status.aceito
+fieldflow_worker  | 2026-05-21 20:12:10,856 INFO worker.handlers [worker] gravou notificacao id=13 event_id=584d5758-d163-40db-aaf2-f208ff9c7253 routing_key=candidatura.rejeitada

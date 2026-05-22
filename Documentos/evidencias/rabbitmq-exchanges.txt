@@ -1,0 +1,4 @@
+name                                type     durable
+------------------------------------------------------------
+fieldflow.events                    topic    True
+fieldflow.events.dlx                fanout   True

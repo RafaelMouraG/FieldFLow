@@ -20,6 +20,8 @@ def create_usuario(
     senha = data.pop("senha")
     usuario = Usuario(**data, senha_hash=hash_password(senha))
     saved = repository.save(db, usuario)
+    db.commit()
+    db.refresh(saved)
     publisher.publish(
         "usuario.criado",
         {
@@ -52,6 +54,8 @@ def update_usuario(
     for key, value in data.items():
         setattr(usuario, key, value)
     saved = repository.save(db, usuario)
+    db.commit()
+    db.refresh(saved)
     publisher.publish(
         "usuario.atualizado",
         {"id": saved.id, "email": saved.email, "tipo": saved.tipo.value},
@@ -73,5 +77,6 @@ def delete_usuario(
         return False
     usuario.ativo = False
     repository.save(db, usuario)
+    db.commit()
     publisher.publish("usuario.removido", {"id": usuario_id})
     return True

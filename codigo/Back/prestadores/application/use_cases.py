@@ -32,7 +32,10 @@ def criar_perfil_pendente(db: Session, usuario_id: int) -> PerfilPrestador:
         regioes_atuacao=[],
         equipamentos_proprios=[],
     )
-    return repository.save(db, perfil)
+    saved = repository.save(db, perfil)
+    db.commit()
+    db.refresh(saved)
+    return saved
 
 
 def get_perfil(db: Session, usuario_id: int) -> PerfilPrestador | None:
@@ -56,6 +59,8 @@ def enviar_perfil(
     perfil.motivo_reprovacao = None
     perfil.avaliado_em = None
     saved = repository.save(db, perfil)
+    db.commit()
+    db.refresh(saved)
 
     publisher.publish("prestador.perfil.enviado", _payload(saved))
     return saved
@@ -71,6 +76,8 @@ def aprovar_perfil(
     perfil.motivo_reprovacao = None
     perfil.avaliado_em = datetime.now(tz=timezone.utc)
     saved = repository.save(db, perfil)
+    db.commit()
+    db.refresh(saved)
     publisher.publish("prestador.aprovado", _payload(saved))
     return saved
 
@@ -85,6 +92,8 @@ def reprovar_perfil(
     perfil.motivo_reprovacao = motivo
     perfil.avaliado_em = datetime.now(tz=timezone.utc)
     saved = repository.save(db, perfil)
+    db.commit()
+    db.refresh(saved)
     payload = _payload(saved)
     payload["motivo"] = motivo
     publisher.publish("prestador.reprovado", payload)

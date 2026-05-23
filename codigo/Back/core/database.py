@@ -17,5 +17,10 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        # Safety net: se o use case levantou sem fazer rollback, garante que
+        # nenhum flush pendente vaze para a proxima request via session reuse.
+        db.rollback()
+        raise
     finally:
         db.close()

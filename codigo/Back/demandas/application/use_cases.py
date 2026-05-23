@@ -48,6 +48,8 @@ def create_demanda(
 ) -> Demanda:
     demanda = Demanda(cliente_id=cliente_id, **payload.model_dump())
     saved = repository.save(db, demanda)
+    db.commit()
+    db.refresh(saved)
     publisher.publish("demanda.criada", _demanda_payload(saved))
     return saved
 
@@ -109,6 +111,8 @@ def update_demanda_status(
     status_anterior = demanda.status
     demanda.status = status
     saved = repository.save(db, demanda)
+    db.commit()
+    db.refresh(saved)
 
     payload = _demanda_payload(saved)
     payload["status_anterior"] = status_anterior.value
@@ -137,6 +141,8 @@ def update_demanda(
     for key, value in payload.model_dump().items():
         setattr(demanda, key, value)
     saved = repository.save(db, demanda)
+    db.commit()
+    db.refresh(saved)
     publisher.publish("demanda.atualizada", _demanda_payload(saved))
     return saved
 
@@ -155,5 +161,6 @@ def delete_demanda(
             "Apenas o cliente dono da demanda pode remove-la"
         )
     repository.delete(db, demanda)
+    db.commit()
     publisher.publish("demanda.removida", {"id": demanda_id})
     return True

@@ -4,8 +4,10 @@ from notificacoes.infrastructure.database.models import Notificacao
 
 
 def save(db: Session, notificacao: Notificacao) -> Notificacao:
+    # Sem commit: o consumer (worker._process) e quem fecha a transacao
+    # depois de todos os efeitos de um evento (persist + acoes derivadas).
     db.add(notificacao)
-    db.commit()
+    db.flush()
     db.refresh(notificacao)
     return notificacao
 

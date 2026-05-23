@@ -50,12 +50,13 @@ def get_visiveis_para_prestador(
 
 
 def save(db: Session, demanda: Demanda) -> Demanda:
+    # Sem commit: unidade de trabalho controlada pelo use case / get_db.
     db.add(demanda)
-    db.commit()
+    db.flush()
     db.refresh(demanda)
     return demanda
 
 
 def delete(db: Session, demanda: Demanda) -> None:
     db.delete(demanda)
-    db.commit()
+    db.flush()

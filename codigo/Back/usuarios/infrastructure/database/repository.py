@@ -20,7 +20,8 @@ def get_all(db: Session) -> list[Usuario]:
 
 
 def save(db: Session, usuario: Usuario) -> Usuario:
+    # Sem commit: unidade de trabalho controlada pelo use case / get_db.
     db.add(usuario)
-    db.commit()
+    db.flush()
     db.refresh(usuario)
     return usuario

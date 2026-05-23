@@ -39,6 +39,12 @@ def _process(routing_key: str, payload: dict, event_id: str) -> None:
             validar_perfil_prestador(db, payload, get_event_publisher())
         elif routing_key == "candidatura.aceita":
             rejeitar_concorrentes(db, payload, get_event_publisher())
+        # Commit ao final do processamento da mensagem: idempotencia da
+        # notificacao + acoes derivadas viram uma unica transacao.
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

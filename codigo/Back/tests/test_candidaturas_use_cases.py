@@ -99,3 +99,54 @@ def test_aceitar_falha_se_nao_for_dono_da_demanda(
         aceitar_candidatura(
             db, c1.id, outro_prestador_aprovado.id, publisher
         )
+
+
+def test_aceitar_candidatura_e_atomico_se_save_demanda_falha(
+    db, publisher, cliente, prestador_aprovado, monkeypatch
+):
+    """Falha entre os dois saves nao pode deixar candidatura ACEITA
+    com demanda ainda PENDENTE. Bug #2: atomicidade."""
+    demanda = create_demanda(db, _demanda_payload(), cliente.id, publisher)
+    c1 = candidatar(
+        db,
+        demanda.id,
+        prestador_aprovado.id,
+        _candidatura_payload(1500.0),
+        publisher,
+    )
+
+    # Simula falha no save da demanda — apos a candidatura ja ter sido
+    # marcada como ACEITA na sessao.
+    from demandas.infrastructure.database import repository as demandas_repo
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("falha simulada no save da demanda")
+
+    monkeypatch.setattr(demandas_repo, "save", boom)
+
+    publisher.events.clear()
+    with pytest.raises(RuntimeError):
+        aceitar_candidatura(db, c1.id, cliente.id, publisher)
+
+    # Safety net que o get_db faria em producao: rollback de qualquer flush
+    # pendente. Depois verificamos o estado em uma nova sessao
+    # (mesma engine in-memory via StaticPool).
+    db.rollback()
+
+    from sqlalchemy.orm import sessionmaker
+
+    SessionLocal = sessionmaker(bind=db.get_bind(), autoflush=False)
+    nova = SessionLocal()
+    try:
+        c1_recarregada = nova.query(type(c1)).filter_by(id=c1.id).first()
+        demanda_recarregada = (
+            nova.query(type(demanda)).filter_by(id=demanda.id).first()
+        )
+        assert c1_recarregada.status == StatusCandidatura.PENDENTE
+        assert demanda_recarregada.status == DemandaStatus.PENDENTE
+        assert demanda_recarregada.prestador_id is None
+    finally:
+        nova.close()
+
+    # Nenhum evento deve ter sido publicado (publish so acontece pos-commit).
+    assert publisher.events == []

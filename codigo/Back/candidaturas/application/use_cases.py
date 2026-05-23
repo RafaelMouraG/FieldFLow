@@ -82,6 +82,8 @@ def candidatar(
         status=StatusCandidatura.PENDENTE,
     )
     saved = repository.save(db, candidatura)
+    db.commit()
+    db.refresh(saved)
     publisher.publish("candidatura.criada", _payload(saved))
     return saved
 
@@ -120,6 +122,12 @@ def aceitar_candidatura(
     demanda.prestador_id = candidatura.prestador_id
     demandas_repository.save(db, demanda)
 
+    # Commit unico: candidatura ACEITA e demanda ACEITO sobem juntas.
+    # Se algo falhar antes daqui, o rollback (get_db) descarta as duas.
+    db.commit()
+    db.refresh(saved)
+    db.refresh(demanda)
+
     publisher.publish("candidatura.aceita", _payload(saved))
     publisher.publish(
         "demanda.status.aceito",
@@ -156,10 +164,15 @@ def rejeitar_outras_candidaturas(
     for c in pendentes:
         c.status = StatusCandidatura.REJEITADA
         repository.save(db, c)
+        rejeitadas.append(c)
+
+    # Commit unico: todas as rejeicoes em lote, ou nenhuma.
+    db.commit()
+    for c in rejeitadas:
+        db.refresh(c)
         payload = _payload(c)
         payload["motivo"] = "outra_candidatura_aceita"
         publisher.publish("candidatura.rejeitada", payload)
-        rejeitadas.append(c)
     return rejeitadas
 
 
@@ -183,6 +196,8 @@ def cancelar_candidatura(
 
     candidatura.status = StatusCandidatura.CANCELADA
     saved = repository.save(db, candidatura)
+    db.commit()
+    db.refresh(saved)
     publisher.publish("candidatura.cancelada", _payload(saved))
     return saved
 

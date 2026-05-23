@@ -54,7 +54,9 @@ def listar_por_prestador(db: Session, prestador_id: int) -> list[Candidatura]:
 
 
 def save(db: Session, candidatura: Candidatura) -> Candidatura:
+    # Sem commit: a unidade de trabalho fica a cargo do use case (atomicidade
+    # entre multiplas tabelas) ou do get_db (boundary da request).
     db.add(candidatura)
-    db.commit()
+    db.flush()
     db.refresh(candidatura)
     return candidatura

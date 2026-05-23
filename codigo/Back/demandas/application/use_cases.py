@@ -15,6 +15,18 @@ class OperacaoNaoPermitidaError(Exception):
     """Usuario nao tem permissao para a operacao."""
 
 
+# Transicoes permitidas via PATCH /demandas/{id}/status.
+# PENDENTE -> ACEITO acontece via POST /candidaturas/{id}/aceitar.
+# Cada transicao define quem pode disparar: "cliente" (dono da demanda)
+# ou "prestador" (prestador atribuido).
+_TRANSICOES_PERMITIDAS: dict[
+    tuple[DemandaStatus, DemandaStatus], str
+] = {
+    (DemandaStatus.ACEITO, DemandaStatus.EM_EXECUCAO): "prestador",
+    (DemandaStatus.EM_EXECUCAO, DemandaStatus.CONCLUIDO): "cliente",
+}
+
+
 def _demanda_payload(demanda: Demanda) -> dict:
     return {
         "id": demanda.id,
@@ -52,6 +64,12 @@ def list_demandas_pendentes(db: Session) -> list[Demanda]:
     return repository.get_pendentes(db)
 
 
+def list_demandas_para_prestador(
+    db: Session, prestador_id: int
+) -> list[Demanda]:
+    return repository.get_visiveis_para_prestador(db, prestador_id)
+
+
 def get_demanda(db: Session, demanda_id: int) -> Demanda | None:
     return repository.get_by_id(db, demanda_id)
 
@@ -59,7 +77,7 @@ def get_demanda(db: Session, demanda_id: int) -> Demanda | None:
 def update_demanda_status(
     db: Session,
     demanda_id: int,
-    cliente_id: int,
+    usuario_id: int,
     status: DemandaStatus,
     publisher: EventPublisher,
 ) -> Demanda | None:
@@ -71,9 +89,21 @@ def update_demanda_status(
     demanda = repository.get_by_id(db, demanda_id)
     if not demanda:
         return None
-    if demanda.cliente_id != cliente_id:
+
+    transicao = (demanda.status, status)
+    ator = _TRANSICOES_PERMITIDAS.get(transicao)
+    if ator is None:
+        raise TransicaoStatusInvalidaError(
+            f"Transicao {demanda.status.value} -> {status.value} nao permitida"
+        )
+
+    if ator == "cliente" and demanda.cliente_id != usuario_id:
         raise OperacaoNaoPermitidaError(
-            "Apenas o cliente dono da demanda pode alterar o status"
+            "Apenas o cliente dono da demanda pode realizar esta transicao"
+        )
+    if ator == "prestador" and demanda.prestador_id != usuario_id:
+        raise OperacaoNaoPermitidaError(
+            "Apenas o prestador atribuido pode realizar esta transicao"
         )
 
     status_anterior = demanda.status

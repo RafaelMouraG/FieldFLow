@@ -10,6 +10,7 @@ from demandas.application.use_cases import (
     delete_demanda,
     get_demanda,
     list_demandas_do_cliente,
+    list_demandas_para_prestador,
     list_demandas_pendentes,
     update_demanda,
     update_demanda_status,
@@ -50,6 +51,8 @@ def listar_demandas(
 ):
     if current_user.tipo == TipoUsuario.CLIENTE:
         return list_demandas_do_cliente(db, current_user.id)
+    if current_user.tipo == TipoUsuario.PRESTADOR:
+        return list_demandas_para_prestador(db, current_user.id)
     return list_demandas_pendentes(db)
 
 

@@ -30,6 +30,25 @@ def get_pendentes(db: Session) -> list[Demanda]:
     )
 
 
+def get_visiveis_para_prestador(
+    db: Session, prestador_id: int
+) -> list[Demanda]:
+    """Demandas relevantes para um prestador.
+
+    Inclui as PENDENTES (para se candidatar) e as ja atribuidas a ele
+    (para acompanhar e transicionar de status).
+    """
+    return (
+        db.query(Demanda)
+        .filter(
+            (Demanda.status == DemandaStatus.PENDENTE)
+            | (Demanda.prestador_id == prestador_id)
+        )
+        .order_by(Demanda.id.desc())
+        .all()
+    )
+
+
 def save(db: Session, demanda: Demanda) -> Demanda:
     db.add(demanda)
     db.commit()

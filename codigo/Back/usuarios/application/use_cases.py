@@ -49,8 +49,6 @@ def update_usuario(
     if not usuario:
         return None
     data = payload.model_dump(exclude_unset=True)
-    if "senha" in data:
-        usuario.senha_hash = hash_password(data.pop("senha"))
     for key, value in data.items():
         setattr(usuario, key, value)
     saved = repository.save(db, usuario)

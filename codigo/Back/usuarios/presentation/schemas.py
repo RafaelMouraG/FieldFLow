@@ -37,9 +37,10 @@ class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
     email: Optional[EmailStr] = None
     telefone: Optional[str] = None
-    tipo: Optional[TipoUsuario] = None
-    ativo: Optional[bool] = None
-    senha: Optional[str] = Field(default=None, min_length=6, max_length=128)
+    # Campos sensiveis (senha, tipo, ativo) NAO entram aqui:
+    # - senha: fluxo proprio em PUT /auth/me/senha (exige senha atual)
+    # - tipo: definido no cadastro; trocar quebra invariantes (ex.: perfil prestador)
+    # - ativo: desativacao via DELETE /usuarios/{id}
 
 
 class UsuarioResponse(UsuarioBase):

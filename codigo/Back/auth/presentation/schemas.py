@@ -20,3 +20,8 @@ class TokenResponse(BaseModel):
 class RegisterResponse(BaseModel):
     usuario: UsuarioResponse
     token: TokenResponse
+
+
+class SenhaUpdateRequest(BaseModel):
+    senha_atual: str = Field(min_length=6, max_length=128)
+    senha_nova: str = Field(min_length=6, max_length=128)

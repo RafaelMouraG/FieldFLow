@@ -1,12 +1,9 @@
 import logging
+import sys
 
-from candidaturas.infrastructure.database import models as _c_models  # noqa: F401
-from core.database import Base, engine
-from demandas.infrastructure.database import models as _d_models  # noqa: F401
-from notificacoes.infrastructure.database import models as _n_models  # noqa: F401
-from prestadores.infrastructure.database import models as _p_models  # noqa: F401
-from usuarios.infrastructure.database import models as _u_models  # noqa: F401
+from core.migrations import upgrade_head
 from worker.consumer import run
+from worker.reprocess import reprocess_dlq
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,7 +12,12 @@ logging.basicConfig(
 
 
 def main() -> None:
-    Base.metadata.create_all(bind=engine)
+    argv = sys.argv[1:]
+    if argv and argv[0] == "reprocess-dlq":
+        reprocess_dlq()
+        return
+
+    upgrade_head()
     run()
 
 

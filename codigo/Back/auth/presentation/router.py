@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 from auth.application.use_cases import (
     CredenciaisInvalidasError,
     EmailJaCadastradoError,
+    SenhaAtualIncorretaError,
     authenticate,
+    change_password,
     register,
 )
 from auth.dependencies import get_current_user
@@ -12,6 +14,7 @@ from auth.presentation.schemas import (
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
+    SenhaUpdateRequest,
     TokenResponse,
 )
 from core.database import get_db
@@ -56,3 +59,15 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UsuarioResponse)
 def me(current_user: Usuario = Depends(get_current_user)):
     return current_user
+
+
+@router.put("/me/senha", status_code=status.HTTP_204_NO_CONTENT)
+def trocar_senha(
+    payload: SenhaUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    try:
+        change_password(db, current_user, payload.senha_atual, payload.senha_nova)
+    except SenhaAtualIncorretaError:
+        raise HTTPException(status_code=400, detail="Senha atual incorreta")

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from auth.security import create_access_token, verify_password
+from auth.security import create_access_token, hash_password, verify_password
 from mom.interface import EventPublisher
 from prestadores.application.use_cases import criar_perfil_pendente
 from usuarios.application.use_cases import create_usuario
@@ -15,6 +15,10 @@ class CredenciaisInvalidasError(Exception):
 
 
 class EmailJaCadastradoError(Exception):
+    pass
+
+
+class SenhaAtualIncorretaError(Exception):
     pass
 
 
@@ -37,6 +41,16 @@ def authenticate(db: Session, email: str, senha: str) -> tuple[Usuario, str]:
     if not verify_password(senha, usuario.senha_hash):
         raise CredenciaisInvalidasError()
     return usuario, _build_token(usuario)
+
+
+def change_password(
+    db: Session, usuario: Usuario, senha_atual: str, senha_nova: str
+) -> None:
+    if not verify_password(senha_atual, usuario.senha_hash):
+        raise SenhaAtualIncorretaError()
+    usuario.senha_hash = hash_password(senha_nova)
+    db.add(usuario)
+    db.commit()
 
 
 def _build_token(usuario: Usuario) -> str:

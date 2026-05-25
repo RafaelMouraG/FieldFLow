@@ -1,0 +1,54 @@
+GET /notificacoes (total: 13)
+================================================================================
+[ 1] 2026-05-21T20:12:07.065876Z  usuario.criado
+     event_id: ade1a520-6a08-415b-bd04-c42ec18feecb
+     payload:  {"event_id": "ade1a520-6a08-415b-bd04-c42ec18feecb", "id": 1, "nome": "Joana Cliente", "email": "joana@cliente.com", "ti
+
+[ 2] 2026-05-21T20:12:07.312680Z  usuario.criado
+     event_id: d7f44451-ba95-4f57-b5a0-c3179a6564f2
+     payload:  {"event_id": "d7f44451-ba95-4f57-b5a0-c3179a6564f2", "id": 2, "nome": "Pedro Prestador", "email": "pedro@prest.com", "ti
+
+[ 3] 2026-05-21T20:12:07.557424Z  usuario.criado
+     event_id: b2630106-1d33-4ea1-a4d2-1198204ea242
+     payload:  {"event_id": "b2630106-1d33-4ea1-a4d2-1198204ea242", "id": 3, "nome": "Paulo Prestador", "email": "paulo@prest.com", "ti
+
+[ 4] 2026-05-21T20:12:07.620707Z  prestador.perfil.enviado
+     event_id: 17abe952-6b1b-4e80-aae5-dc45cab1b0d4
+     payload:  {"event_id": "17abe952-6b1b-4e80-aae5-dc45cab1b0d4", "usuario_id": 2, "status": "EM_ANALISE", "anos_experiencia": 10, "e
+
+[ 5] 2026-05-21T20:12:07.629432Z  prestador.aprovado
+     event_id: cf4ca04d-7004-4c98-b8d0-fc165b0c1162
+     payload:  {"event_id": "cf4ca04d-7004-4c98-b8d0-fc165b0c1162", "usuario_id": 2, "status": "APROVADO", "anos_experiencia": 10, "esp
+
+[ 6] 2026-05-21T20:12:07.633681Z  prestador.perfil.enviado
+     event_id: 17c83278-22b4-4485-80b5-c18a722f6057
+     payload:  {"event_id": "17c83278-22b4-4485-80b5-c18a722f6057", "usuario_id": 3, "status": "EM_ANALISE", "anos_experiencia": 5, "es
+
+[ 7] 2026-05-21T20:12:07.636811Z  prestador.aprovado
+     event_id: 0bada54a-587a-45cd-9b51-494f46fd58b5
+     payload:  {"event_id": "0bada54a-587a-45cd-9b51-494f46fd58b5", "usuario_id": 3, "status": "APROVADO", "anos_experiencia": 5, "espe
+
+[ 8] 2026-05-21T20:12:10.673757Z  demanda.criada
+     event_id: 93e610f7-c06f-48dd-8dc1-c6f061af959a
+     payload:  {"event_id": "93e610f7-c06f-48dd-8dc1-c6f061af959a", "id": 1, "cliente_id": 1, "prestador_id": null, "titulo": "Pulveriz
+
+[ 9] 2026-05-21T20:12:10.747427Z  candidatura.criada
+     event_id: 138df7ad-f0b5-4dc9-82c3-5bb4315872cb
+     payload:  {"event_id": "138df7ad-f0b5-4dc9-82c3-5bb4315872cb", "id": 1, "demanda_id": 1, "prestador_id": 2, "valor_proposto": 1450
+
+[10] 2026-05-21T20:12:10.803042Z  candidatura.criada
+     event_id: 2d8ed004-0a99-46a2-b2a4-1925ba9900c4
+     payload:  {"event_id": "2d8ed004-0a99-46a2-b2a4-1925ba9900c4", "id": 2, "demanda_id": 1, "prestador_id": 3, "valor_proposto": 1800
+
+[11] 2026-05-21T20:12:10.835959Z  candidatura.aceita
+     event_id: 8888c405-52a2-49ab-8447-c6ee548bfc28
+     payload:  {"event_id": "8888c405-52a2-49ab-8447-c6ee548bfc28", "id": 1, "demanda_id": 1, "prestador_id": 2, "valor_proposto": 1450
+
+[12] 2026-05-21T20:12:10.848037Z  demanda.status.aceito
+     event_id: 11d60621-f6a4-41f8-8cd8-e24c1ab5c9b4
+     payload:  {"event_id": "11d60621-f6a4-41f8-8cd8-e24c1ab5c9b4", "id": 1, "cliente_id": 1, "prestador_id": 2, "titulo": "Pulverizaca
+
+[13] 2026-05-21T20:12:10.852009Z  candidatura.rejeitada
+     event_id: 584d5758-d163-40db-aaf2-f208ff9c7253
+     payload:  {"event_id": "584d5758-d163-40db-aaf2-f208ff9c7253", "id": 2, "demanda_id": 1, "prestador_id": 3, "valor_proposto": 1800
+

@@ -1,0 +1,5 @@
+name                                msgs     consumers  durable
+----------------------------------------------------------------------
+fieldflow.notificacoes              0        1          True
+   arguments: {'x-dead-letter-exchange': 'fieldflow.events.dlx'}
+fieldflow.notificacoes.dlq          0        0          True

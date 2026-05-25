@@ -3,4 +3,10 @@ uvicorn
 sqlalchemy
 psycopg2-binary
 pydantic-settings
+pydantic[email]
 python-multipart
+pika
+alembic
+bcrypt
+pyjwt
+pytest

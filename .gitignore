@@ -23,3 +23,5 @@ codigo/Mobile/field_flow/.flutter-plugins-dependencies
 .idea/
 .vscode/
 *.iml
+
+AGENTS.md

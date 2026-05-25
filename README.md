@@ -25,7 +25,7 @@
 | Sprint | Foco | Status | Prazo |
 |--------|------|--------|-------|
 | Sprint 1 | Backend REST + Arquitetura | ✅ Concluída | 11/05/2026 |
-| Sprint 2 | Integração MOM (RabbitMQ/Redis) | 🔄 Em andamento | 25/05/2026 |
+| Sprint 2 | Integração MOM (RabbitMQ) | ✅ Concluída | 25/05/2026 |
 | Sprint 3 | App Flutter — Cliente | ⏳ Pendente | 15/06/2026 |
 | Sprint 4 | App Flutter — Prestador + Entrega Final | ⏳ Pendente | 03/07/2026 |
 
@@ -61,14 +61,17 @@ O **FieldFlow** resolve esse gargalo centralizando a demanda e otimizando a log�
 
 ---
 
-## ✨ Funcionalidades Principais
-
-- 📋 **Gestão de Demandas (Contratos):** Produtor cria solicitações com tipo de serviço, área, localização e recompensa
-- 🗺️ **Painel de Oportunidades:** Prestador visualiza demandas disponíveis na sua região
-- 🔔 **Notificações em Tempo Real:** MOM notifica prestadores sobre novas demandas de forma assíncrona *(Sprint 2)*
-- 🔄 **Fluxo de Status Orientado a Eventos:** Ciclo de vida `PENDENTE → ACEITO → EM_EXECUCAO → CONCLUIDO`
-- 📱 **App Móvel para o Cliente:** Interface Flutter para criação e acompanhamento de demandas *(Sprint 3)*
-- 📱 **App Móvel para o Prestador:** Interface Flutter para aceite e execução de ordens de serviço *(Sprint 4)*
+- 🔐 **Autenticação JWT:** Registro e login com bcrypt; todos os endpoints de negócio exigem Bearer token
+- 👥 **Perfis de Usuário:** Distinção clara entre CLIENTE (produtor) e PRESTADOR (técnico) com validações dedicadas
+- 📋 **Gestão de Demandas:** Cliente cria solicitações com tipo de serviço, área e remuneração
+- 🗺️ **Painel de Oportunidades:** Prestador aprovado visualiza demandas PENDENTES e se candidata
+- ✅ **Validação de Perfil Assíncrona:** Worker valida currículo (experiência + certificações) e aprova/reprova via eventos
+- 🔁 **Aceite com Rejeição em Cascata:** Ao aceitar uma candidatura, o worker rejeita automaticamente as concorrentes
+- 📨 **Comunicação 100% Assíncrona:** API publica eventos no RabbitMQ; worker em processo separado consome e reage
+- 🔄 **Fluxo de Status Orientado a Eventos:** Ciclo `PENDENTE → ACEITO → EM_EXECUCAO → CONCLUIDO`
+- 🛡️ **Idempotência + DLQ:** `event_id` único por mensagem; falhas vão para Dead-Letter Queue
+- 📱 **App Móvel para o Cliente:** Interface Flutter *(Sprint 3 — pendente)*
+- 📱 **App Móvel para o Prestador:** Interface Flutter *(Sprint 4 — pendente)*
 
 ---
 
@@ -92,44 +95,83 @@ O **FieldFlow** resolve esse gargalo centralizando a demanda e otimizando a log�
 | Flutter | 3.x | Framework mobile (Sprints 3 e 4) |
 | Dart | 3.x | Linguagem |
 
-### 📨 Mensageria (Sprint 2)
+### 📨 Mensageria
+
+| Tecnologia | Versão | Uso |
+|---|---|---|
+| RabbitMQ | 4.3 | Middleware Orientado a Mensagens (topic exchange) |
+| pika | 1.x | Cliente AMQP (publisher na API + consumer no worker) |
+
+### 🔐 Autenticação
 
 | Tecnologia | Uso |
 |---|---|
-| RabbitMQ ou Redis Pub/Sub | Middleware Orientado a Mensagens (MOM) |
+| PyJWT | Geração e validação de tokens Bearer |
+| bcrypt (via passlib) | Hash de senhas |
+
+### 🗄️ Migrações
+
+| Tecnologia | Uso |
+|---|---|
+| Alembic | Versionamento do schema PostgreSQL |
 
 ---
 
 ## 🏛 Arquitetura
 
-O sistema adota uma **Arquitetura Orientada a Eventos (EDA)** com dois aplicativos móveis (cliente e prestador), um backend REST e um MOM para comunicação assíncrona.
+O sistema adota uma **Arquitetura Orientada a Eventos (EDA)** com dois aplicativos móveis (cliente e prestador), um backend REST, um worker consumidor de eventos e um MOM (RabbitMQ) para comunicação assíncrona.
 
-Os diagramas completos estão em [`Documentos/diagrama-arquitetura.md`](Documentos/diagrama-arquitetura.md).
+Diagramas completos: [`Documentos/Sprint 1/diagrama-arquitetura.md`](Documentos/Sprint%201/diagrama-arquitetura.md).
+Catálogo de eventos: [`Documentos/Sprint 2/eventos-mom.md`](Documentos/Sprint%202/eventos-mom.md).
 
 ### Visão Geral
 
 ```
-App Cliente (Flutter)  ──REST/JSON──▶  FieldFlow API (FastAPI)  ──SQL──▶  PostgreSQL
-App Prestador (Flutter) ──REST/JSON──▶  FieldFlow API (FastAPI)
-                                               │
-                                         Publish eventos
-                                               ▼
-                                    RabbitMQ / Redis (MOM)
-                                               │
-                                     Notificação assíncrona
-                                               ▼
-                                     App Prestador (Flutter)
+App Cliente (Flutter)   ──REST/JSON──▶  ┌─────────────────────┐  ──SQL──▶  PostgreSQL
+App Prestador (Flutter) ──REST/JSON──▶  │ FieldFlow API       │              ▲
+                                        │ (FastAPI + JWT)     │              │
+                                        └──────────┬──────────┘              │
+                                                   │ publish                 │
+                                                   ▼                         │
+                                        ┌─────────────────────┐              │
+                                        │ RabbitMQ            │              │
+                                        │ exchange topic      │              │
+                                        │ fieldflow.events    │              │
+                                        └──────────┬──────────┘              │
+                                                   │ consume                 │
+                                                   ▼                         │
+                                        ┌─────────────────────┐              │
+                                        │ fieldflow_worker    │──INSERT/UPDATE
+                                        │ (processo separado) │
+                                        └─────────────────────┘
 ```
 
-### Camadas do Backend
+A API e o worker **não trocam HTTP entre si** — toda integração passa pelo broker. Mensagens com falha vão para `fieldflow.notificacoes.dlq` via DLX.
 
-| Camada | Pasta | Responsabilidade |
-|---|---|---|
-| Controllers | `api/` | Rotas e tratamento de requisições HTTP |
-| Services | `services/` | Lógica de negócio |
-| Models | `models/` | Entidades SQLAlchemy (ORM) |
-| Schemas | `schemas/` | Validação e serialização Pydantic |
-| Config | `core/` + `database/` | Configurações e sessão do banco |
+### Organização do Backend (Clean Architecture por Bounded Context)
+
+Cada módulo de domínio segue o mesmo molde de 4 camadas:
+
+```
+<modulo>/
+├── domain/          # Entidades e enums (puro Python, sem framework)
+├── application/     # Use cases (orquestram regras de negócio)
+├── infrastructure/  # Repositories SQLAlchemy + adapters
+└── presentation/    # Routers FastAPI + schemas Pydantic
+```
+
+| Módulo | Responsabilidade |
+|---|---|
+| `auth/` | Registro, login JWT, recuperação do `current_user` |
+| `usuarios/` | CRUD básico de usuários (CLIENTE / PRESTADOR) |
+| `prestadores/` | Perfil profissional + status (INCOMPLETO → EM_ANALISE → APROVADO/REPROVADO) |
+| `demandas/` | Solicitações do cliente e transições de status |
+| `candidaturas/` | Propostas de prestadores para demandas + aceite |
+| `notificacoes/` | Tabela de auditoria dos eventos consumidos (evidência da Sprint 2) |
+| `mom/` | Interface `EventPublisher` (DIP) + impl. RabbitMQ + Noop |
+| `worker/` | Processo separado que consome `fieldflow.notificacoes` e dispara reações |
+| `core/` | Configurações (pydantic-settings) e sessão SQLAlchemy |
+| `alembic/` | Versionamento do schema |
 
 ---
 
@@ -150,6 +192,13 @@ Crie um arquivo `.env` na raiz do projeto com base nas variáveis abaixo:
 | `POSTGRES_PASSWORD` | Senha do banco de dados | `sua_senha` |
 | `POSTGRES_DB` | Nome do banco de dados | `fieldflow_db` |
 | `DATABASE_URL` | URL de conexão do SQLAlchemy | `postgresql://user:senha@db:5432/fieldflow_db` |
+| `RABBITMQ_DEFAULT_USER` | Usuário do RabbitMQ | `fieldflow` |
+| `RABBITMQ_DEFAULT_PASS` | Senha do RabbitMQ | `fieldflow` |
+| `RABBITMQ_URL` | URL AMQP completa | `amqp://fieldflow:fieldflow@rabbitmq:5672/` |
+| `MOM_EXCHANGE` | Nome do exchange principal | `fieldflow.events` |
+| `JWT_SECRET` | Segredo para assinatura dos tokens | `troque_em_producao` |
+| `JWT_ALGORITHM` | Algoritmo do JWT | `HS256` |
+| `JWT_EXPIRES_MINUTES` | TTL do token em minutos | `1440` |
 
 > ⚠️ Nunca versione o arquivo `.env`. Ele já está no `.gitignore`.
 
@@ -157,12 +206,11 @@ Crie um arquivo `.env` na raiz do projeto com base nas variáveis abaixo:
 
 ### 🐳 Execução com Docker Compose
 
-A forma recomendada para rodar o projeto completo (API + banco de dados):
+A forma recomendada para rodar o projeto completo (API + worker + PostgreSQL + RabbitMQ):
 
 ```bash
 # Na raiz do projeto
-cd infra
-docker compose up --build -d
+docker compose -f infra/docker-compose.yml up --build -d
 ```
 
 Verifique se os containers estão rodando:
@@ -171,13 +219,22 @@ Verifique se os containers estão rodando:
 docker ps
 ```
 
-Para encerrar:
+Para encerrar (preservando dados):
 
 ```bash
-docker compose down
+docker compose -f infra/docker-compose.yml down
 ```
 
-A API estará disponível em **http://localhost:8000**.
+Para resetar tudo (volumes inclusos — útil após mudanças de schema sem migration):
+
+```bash
+docker compose -f infra/docker-compose.yml down -v
+```
+
+Serviços expostos:
+
+- **API:** http://localhost:8000
+- **RabbitMQ Management:** http://localhost:15672 (login: `fieldflow` / `fieldflow`)
 
 ---
 
@@ -208,29 +265,90 @@ Com a API rodando, a documentação interativa gerada automaticamente pelo FastA
 - **Swagger UI:** http://localhost:8000/docs
 - **ReDoc:** http://localhost:8000/redoc
 
-### Endpoints — Sprint 1
+> 🔒 Todos os endpoints abaixo (exceto `/auth/register` e `/auth/login`) exigem **Bearer JWT** no header `Authorization`.
+
+### Auth
 
 | Método | Rota | Descrição |
 |---|---|---|
-| `GET` | `/health` | Health check da API |
-| `POST` | `/demandas` | Criar nova demanda |
-| `GET` | `/demandas` | Listar todas as demandas |
-| `GET` | `/demandas/{id}` | Buscar demanda por ID |
-| `PATCH` | `/demandas/{id}/status` | Atualizar status (e atribuir prestador) |
-| `PUT` | `/demandas/{id}` | Atualizar dados da demanda |
-| `DELETE` | `/demandas/{id}` | Remover demanda |
+| `POST` | `/auth/register` | Registro de novo usuário (CLIENTE ou PRESTADOR) |
+| `POST` | `/auth/login` | Login → retorna `access_token` |
+| `GET` | `/auth/me` | Dados do usuário autenticado |
+| `PUT` | `/auth/me/senha` | Alterar a própria senha |
+
+### Usuários
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/usuarios/{id}` | Perfil público (sem documento/telefone) |
+| `PUT` | `/usuarios/{id}` | Atualiza dados (apenas o próprio usuário) |
+| `DELETE` | `/usuarios/{id}` | Remove conta (apenas o próprio usuário) |
+
+### Prestadores
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/prestadores/me/perfil` | Submete currículo para análise → publica evento |
+| `GET` | `/prestadores/me/perfil` | Consulta o próprio perfil profissional |
+| `GET` | `/prestadores/{usuario_id}/perfil` | Consulta perfil público de outro prestador |
+
+### Demandas
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/demandas` | Cliente cria nova demanda (publica `demanda.criada`) |
+| `GET` | `/demandas` | Lista (cliente vê as suas; prestador vê PENDENTES) |
+| `GET` | `/demandas/{id}` | Detalhe da demanda |
+| `PUT` | `/demandas/{id}` | Atualiza (apenas dono, apenas se PENDENTE) |
+| `PATCH` | `/demandas/{id}/status` | Transições EM_EXECUCAO / CONCLUIDO (aceite vai por candidatura) |
+| `DELETE` | `/demandas/{id}` | Remove (apenas dono) |
+
+### Candidaturas
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/demandas/{id}/candidaturas` | Prestador aprovado se candidata |
+| `GET` | `/demandas/{id}/candidaturas` | Cliente lista candidaturas da própria demanda |
+| `POST` | `/candidaturas/{id}/aceitar` | Cliente aceita → worker rejeita concorrentes em cascata |
+| `DELETE` | `/candidaturas/{id}` | Prestador cancela a própria candidatura |
+| `GET` | `/prestadores/me/candidaturas` | Histórico de candidaturas do prestador autenticado |
+
+### Notificações (evidência da Sprint 2)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/notificacoes` | Lista cronológica dos eventos consumidos pelo worker |
 
 ---
 
 ## 🧪 Testes
 
-A coleção de testes com todos os endpoints documentados, exemplos de requisição e resposta está disponível em:
+### Coleção Postman
 
-📁 [`testes/fieldflow_postman_collection.json`](testes/fieldflow_postman_collection.json)
+A coleção com todos os endpoints documentados, exemplos de requisição e resposta está em:
+
+📁 [`Documentos/postman/fieldflow_postman_collection.json`](Documentos/postman/fieldflow_postman_collection.json)
 
 Para importar no Postman: **Import → selecione o arquivo JSON**.
 
 A variável `{{base_url}}` já está configurada para `http://localhost:8000`.
+
+### Testes automatizados
+
+Suíte com pytest + SQLite in-memory + `FakeEventPublisher` (sem RabbitMQ):
+
+```bash
+cd codigo/Back
+pytest
+```
+
+Cobertura atual: use cases de `demandas` e `candidaturas`.
+
+### Evidências Sprint 2
+
+Logs do worker, dumps `GET /notificacoes`, screenshots do RabbitMQ Management e descrição do cenário executado:
+
+📁 [`Documentos/evidencias/`](Documentos/evidencias/)
 
 ---
 
@@ -238,29 +356,41 @@ A variável `{{base_url}}` já está configurada para `http://localhost:8000`.
 
 ```
 FieldFLow/
-├── .env                          # Variáveis de ambiente (não versionado)
+├── .env                                # Variáveis de ambiente (não versionado)
 ├── .gitignore
+├── AGENTS.md
 ├── README.md
 ├── infra/
-│   └── docker-compose.yml        # Orquestração: API + PostgreSQL
+│   └── docker-compose.yml              # API + worker + Postgres + RabbitMQ
 ├── Documentos/
-│   ├── Documento de Proposta - FieldFlow.pdf
-│   └── diagrama-arquitetura.md   # Diagramas Mermaid + schema do banco
-├── testes/
-│   └── fieldflow_postman_collection.json
+│   ├── README.md
+│   ├── Sprint 1/
+│   │   ├── Documento de Proposta - FieldFlow.pdf
+│   │   └── diagrama-arquitetura.md     # Mermaid + schema do banco
+│   ├── Sprint 2/
+│   │   ├── Relatório de Integração.pdf
+│   │   ├── relatorio-mom.md
+│   │   └── eventos-mom.md              # Catálogo de eventos + payloads
+│   ├── evidencias/                     # Screenshots, worker.log, notificacoes.txt
+│   └── postman/
+│       └── fieldflow_postman_collection.json
 └── codigo/
-    ├── Back/                     # Backend FastAPI
+    ├── Back/                           # Backend FastAPI + worker
     │   ├── Dockerfile
     │   ├── requirements.txt
-    │   ├── main.py               # Entry point da aplicação
-    │   ├── api/                  # Routers e controllers
-    │   ├── services/             # Lógica de negócio
-    │   ├── models/               # Entidades SQLAlchemy
-    │   ├── schemas/              # Schemas Pydantic
-    │   ├── database/             # Sessão e engine do banco
-    │   └── core/                 # Configurações (pydantic-settings)
-    └── Mobile/
-        └── field_flow/           # App Flutter (Sprints 3 e 4)
+    │   ├── main.py                     # Entry point da API
+    │   ├── core/                       # config + database (SQLAlchemy)
+    │   ├── auth/                       # Registro/login JWT
+    │   ├── usuarios/                   # CRUD de usuários
+    │   ├── prestadores/                # Perfis profissionais
+    │   ├── demandas/                   # Solicitações do cliente
+    │   ├── candidaturas/               # Propostas + aceite
+    │   ├── notificacoes/               # Auditoria dos eventos (evidência)
+    │   ├── mom/                        # Interface + impl. RabbitMQ
+    │   ├── worker/                     # Consumer (python -m worker)
+    │   ├── alembic/                    # Migrations
+    │   └── tests/                      # pytest + FakeEventPublisher
+    └── Mobile/                         # App Flutter (Sprints 3 e 4)
 ```
 
 ---

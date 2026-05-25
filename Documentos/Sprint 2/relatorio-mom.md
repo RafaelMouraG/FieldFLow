@@ -1,6 +1,6 @@
 # Relatório de Integração — Sprint 2 (MOM)
 **Projeto:** FieldFlow — Marketplace de Serviços Agrícolas
-**Aluno:** Rafael Moura Ganascini · **Disciplina:** LDAMD — PUC Minas, 2026/1
+**Aluno:** Rafael Ganascini de Moura · **Disciplina:** LDAMD — PUC Minas, 2026/1
 
 ## Escolha da ferramenta
 Adotei o **RabbitMQ 4.3.0** como MOM. Kafka foi descartado por complexidade operacional desnecessária para um projeto acadêmico. Redis Pub/Sub é *fire-and-forget* sem persistência — inaceitável para eventos como "demanda criada" ou "perfil enviado para análise". RabbitMQ entrega broker AMQP maduro, filas duráveis, mensagens persistentes, *routing* declarativo por padrão e UI de gerenciamento que facilita evidenciar o funcionamento.

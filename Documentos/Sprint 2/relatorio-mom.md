@@ -3,10 +3,10 @@
 **Aluno:** Rafael Moura Ganascini · **Disciplina:** LDAMD — PUC Minas, 2026/1
 
 ## Escolha da ferramenta
-Adotei o **RabbitMQ 3.13** como MOM. Kafka foi descartado por complexidade operacional desnecessária para um projeto acadêmico. Redis Pub/Sub é *fire-and-forget* sem persistência — inaceitável para eventos como "demanda criada" ou "perfil enviado para análise". RabbitMQ entrega broker AMQP maduro, filas duráveis, mensagens persistentes, *routing* declarativo por padrão e UI de gerenciamento que facilita evidenciar o funcionamento.
+Adotei o **RabbitMQ 4.3.0** como MOM. Kafka foi descartado por complexidade operacional desnecessária para um projeto acadêmico. Redis Pub/Sub é *fire-and-forget* sem persistência — inaceitável para eventos como "demanda criada" ou "perfil enviado para análise". RabbitMQ entrega broker AMQP maduro, filas duráveis, mensagens persistentes, *routing* declarativo por padrão e UI de gerenciamento que facilita evidenciar o funcionamento.
 
 ## Padrão arquitetural
-**Publish/Subscribe com Topic Exchange.** Um único exchange `fieldflow.events` (topic, durável) concentra todos os eventos. A *routing key* segue `<recurso>.<acao>[.<detalhe>]` (ex.: `demanda.status.aceito`), permitindo que novos consumidores se inscrevam sem alterar o produtor. A API publica via interface abstrata `EventPublisher` (DIP): a implementação concreta `RabbitMQEventPublisher` usa `pika` com `delivery_mode=2`; um `NoopEventPublisher` de fallback permite rodar testes sem broker. O consumidor `fieldflow_worker` é processo separado em container próprio (`python -m worker`) que declara a fila durável `fieldflow.notificacoes` com `prefetch_count=10` e ack manual.
+**Publish/Subscribe com topic exchange.** A API não sabe quem processa os eventos — ela só publica no exchange `fieldflow.events` usando uma chave de roteamento no formato `<recurso>.<acao>[.<detalhe>]` (ex.: `demanda.status.aceito`). O worker é um container separado que se inscreve nos padrões que interessam (`demanda.#`, `usuario.#`, `prestador.#`, `candidatura.#`) e cuida do processamento. Para adicionar um novo consumidor — envio de e-mail, indexador de busca, etc. — basta subir outro processo inscrito; produtor e consumidores ficam desacoplados.
 
 ## Casos de negócio assíncronos
 Dois fluxos exemplificam a vantagem de EDA sobre orquestração síncrona:
@@ -28,8 +28,9 @@ Produtor e consumidor **não trocam HTTP entre si**. `GET /notificacoes` é só 
 - **Acoplamento em testes**: `NoopEventPublisher` selecionado em runtime conforme presença de `RABBITMQ_URL`.
 - **Worker como produtor**: validação publica `prestador.aprovado/reprovado` reusando o mesmo `EventPublisher` singleton.
 - **Idempotência**: cada `publish()` gera `event_id` (UUID) no `message_id` AMQP + payload; `notificacoes` tem `UNIQUE(event_id)` e o consumer pula duplicados — resolve redelivery.
-- **Dead-letter queue**: exchange `fieldflow.events.dlx` (fanout) + fila `fieldflow.notificacoes.dlq`; falhas vão pra DLQ via `nack(requeue=False)`.
+- **Dead-letter queue**: exchange `fieldflow.events.dlx` (fanout) + fila `fieldflow.notificacoes.dlq`; falhas vão pra DLQ via `nack(requeue=False)`. **Reprocessamento manual** via `python -m worker reprocess-dlq`: drena a DLQ, lê a routing key original do header `x-death` e republica no exchange principal (dedup garantida pelo `UNIQUE(event_id)` em `notificacoes`).
+- **Migrações versionadas**: schema gerenciado por **Alembic** (baseline em `0001_baseline`). O startup da API e do worker chama `alembic upgrade head` programaticamente — mudanças de schema viram novas revisões, sem `docker compose down -v`.
 - **Dados sensíveis**: senha (texto ou hash) **nunca** integra payload de evento.
 
 ## Limites e próximos passos
-Permanecem como dívida assumida: (a) **outbox pattern** — uma falha entre o commit no banco e o `basic_publish` ainda pode gerar inconsistência; (b) **reprocessamento da DLQ** — hoje só inspeção manual; (c) **Alembic** — mudanças de schema ainda exigem `docker compose down -v`. Candidatos a Sprint 3 ou discussão na apresentação.
+Permanece como dívida assumida o **outbox pattern**: uma falha entre o commit no banco e o `basic_publish` ainda pode gerar inconsistência (a API responde sucesso, mas o evento nunca chega no broker). Solução planejada: tabela `outbox` escrita na mesma transação do agregado + relay separado publicando dela. Candidato a Sprint 3.

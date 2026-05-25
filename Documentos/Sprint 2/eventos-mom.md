@@ -153,7 +153,9 @@ A rejeição em cascata é um caso clássico de "um evento dispara N reações" 
 Cada `publish()` gera um `event_id` (UUID) único, incluído no `message_id` da AMQP e também no corpo do payload. A tabela `notificacoes` tem `UNIQUE(event_id)` e o consumer verifica antes de processar: se já existe linha com aquele `event_id`, a mensagem é descartada (`basic_ack`) sem reprocessar. Isso protege contra redelivery (queda do worker antes do ack) e contra mensagens duplicadas.
 
 ## Dead-Letter Queue
-Mensagens que estouram exceção no handler são `nack`ed sem requeue. O RabbitMQ as roteia para `fieldflow.events.dlx` (fanout) → `fieldflow.notificacoes.dlq`. A DLQ é apenas inspeção manual nesta fase (sem reprocessamento automático).
+Mensagens que estouram exceção no handler são `nack`ed sem requeue. O RabbitMQ as roteia para `fieldflow.events.dlx` (fanout) → `fieldflow.notificacoes.dlq`.
+
+**Reprocessamento manual:** `docker compose exec worker python -m worker reprocess-dlq` drena a fila, lê a routing key original do header `x-death` adicionado pelo broker e republica cada mensagem no exchange `fieldflow.events`. A dedup por `event_id` (`UNIQUE` em `notificacoes`) garante que mensagens já processadas antes do `nack` não geram linha duplicada.
 
 > **Nota operacional:** se você tinha a fila `fieldflow.notificacoes` declarada *sem* `x-dead-letter-exchange` (versão pré-DLQ), o worker detecta o conflito (PRECONDITION_FAILED 406), loga aviso e segue em modo legacy. Para ativar a DLQ basta `docker compose down -v` (reseta volumes) e subir de novo.
 

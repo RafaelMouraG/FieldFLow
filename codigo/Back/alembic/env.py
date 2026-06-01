@@ -17,6 +17,7 @@ from core.database import Base
 # Side-effect imports: registram cada Table no Base.metadata
 import candidaturas.infrastructure.database.models  # noqa: F401
 import demandas.infrastructure.database.models  # noqa: F401
+import emails.infrastructure.database.models  # noqa: F401
 import notificacoes.infrastructure.database.models  # noqa: F401
 import prestadores.infrastructure.database.models  # noqa: F401
 import usuarios.infrastructure.database.models  # noqa: F401

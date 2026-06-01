@@ -12,7 +12,8 @@ import pika
 from pika.exceptions import UnroutableError
 
 from core.config import settings
-from worker.consumer import DLQ_NAME, _connect_with_retry
+from worker.amqp import connect_with_retry
+from worker.consumer import DLQ_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ def reprocess_dlq() -> None:
     if not settings.rabbitmq_url:
         raise RuntimeError("RABBITMQ_URL nao configurada")
 
-    connection = _connect_with_retry()
+    connection = connect_with_retry()
     try:
         pub_channel = connection.channel()
         pub_channel.confirm_delivery()

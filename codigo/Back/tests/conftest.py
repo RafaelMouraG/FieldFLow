@@ -15,8 +15,10 @@ from auth.security import hash_password
 from candidaturas.infrastructure.database import models as _c_models  # noqa: F401
 from core.database import Base
 from demandas.infrastructure.database import models as _d_models  # noqa: F401
+from emails.infrastructure.database import models as _e_models  # noqa: F401
 from mom.interface import EventPublisher
 from notificacoes.infrastructure.database import models as _n_models  # noqa: F401
+from notifier.interface import EmailNotifier
 from prestadores.domain.entities import StatusPerfil
 from prestadores.infrastructure.database import models as _p_models  # noqa: F401
 from prestadores.infrastructure.database.models import PerfilPrestador
@@ -36,6 +38,24 @@ class FakeEventPublisher(EventPublisher):
 
     def routing_keys(self) -> list[str]:
         return [e[0] for e in self.events]
+
+
+class FakeEmailNotifier(EmailNotifier):
+    """Captura os emails 'enviados' em memoria, sem tocar em SMTP."""
+
+    def __init__(self) -> None:
+        self.sent: list[tuple[str, str, str]] = []
+
+    def send(self, to: str, subject: str, body: str) -> None:
+        self.sent.append((to, subject, body))
+
+    def recipients(self) -> list[str]:
+        return [s[0] for s in self.sent]
+
+
+@pytest.fixture()
+def notifier() -> FakeEmailNotifier:
+    return FakeEmailNotifier()
 
 
 @pytest.fixture()

@@ -1,45 +1,54 @@
+"""Segundo consumidor: serviço de notificação por email.
+
+Consome a fila propria `fieldflow.emails`, ligada ao mesmo topic exchange que o
+worker de negocio. Os dois consumidores recebem copias do mesmo evento (padrao
+Publish-Subscribe / fan-out) e trabalham isolados: uma falha de SMTP manda a
+mensagem para `fieldflow.emails.dlq` sem afetar o processamento de negocio.
+"""
 import json
 import logging
 
-from pika.exceptions import ChannelClosedByBroker
-
 from core.config import settings
 from core.database import SessionLocal
-from mom.dependencies import get_event_publisher
-from notificacoes.infrastructure.database import repository as notif_repository
+from emails.infrastructure.database import repository as emails_repository
+from notifier.dependencies import get_email_notifier
 from worker.amqp import connect_with_retry
-from worker.handlers import (
-    persist_event,
-    rejeitar_concorrentes,
-    validar_perfil_prestador,
+from worker.email_handlers import (
+    notificar_candidatura_aceita,
+    notificar_candidatura_criada,
 )
 
 logger = logging.getLogger(__name__)
 
-QUEUE_NAME = "fieldflow.notificacoes"
-BINDINGS = ["demanda.#", "usuario.#", "prestador.#", "candidatura.#"]
-DLX_NAME = "fieldflow.events.dlx"
-DLQ_NAME = "fieldflow.notificacoes.dlq"
+QUEUE_NAME = "fieldflow.emails"
+BINDINGS = ["candidatura.criada", "candidatura.aceita"]
+DLX_NAME = "fieldflow.emails.dlx"
+DLQ_NAME = "fieldflow.emails.dlq"
+
+_HANDLERS = {
+    "candidatura.criada": notificar_candidatura_criada,
+    "candidatura.aceita": notificar_candidatura_aceita,
+}
 
 
 def _process(routing_key: str, payload: dict, event_id: str) -> None:
+    handler = _HANDLERS.get(routing_key)
+    if handler is None:
+        logger.info("[email] routing_key %s sem handler — pulando", routing_key)
+        return
+
     db = SessionLocal()
     try:
-        existente = notif_repository.get_by_event_id(db, event_id)
-        if existente is not None:
+        if emails_repository.get_by_event_id(db, event_id) is not None:
             logger.info(
-                "[worker] evento ja processado event_id=%s — pulando",
-                event_id,
+                "[email] evento ja notificado event_id=%s — pulando", event_id
             )
             return
 
-        persist_event(db, routing_key, payload, event_id)
-        if routing_key == "prestador.perfil.enviado":
-            validar_perfil_prestador(db, payload, get_event_publisher())
-        elif routing_key == "candidatura.aceita":
-            rejeitar_concorrentes(db, payload, get_event_publisher())
-        # Commit ao final do processamento da mensagem: idempotencia da
-        # notificacao + acoes derivadas viram uma unica transacao.
+        handler(db, payload, event_id, get_email_notifier())
+        # Commit ao final: envio do email + registro de auditoria viram uma
+        # unica transacao. Se o handler nao gravou (destinatario invalido),
+        # o commit simplesmente nao persiste nada.
         db.commit()
     except Exception:
         db.rollback()
@@ -59,14 +68,14 @@ def _on_message(channel, method, properties, body) -> None:
     try:
         payload = json.loads(body.decode("utf-8"))
     except json.JSONDecodeError:
-        logger.exception("[worker] payload invalido — descartando")
+        logger.exception("[email] payload invalido — descartando")
         channel.basic_ack(delivery_tag=method.delivery_tag)
         return
 
     event_id = _extract_event_id(properties, payload)
     if not event_id:
         logger.warning(
-            "[worker] mensagem sem event_id routing_key=%s — descartando",
+            "[email] mensagem sem event_id routing_key=%s — descartando",
             routing_key,
         )
         channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -77,7 +86,7 @@ def _on_message(channel, method, properties, body) -> None:
         channel.basic_ack(delivery_tag=method.delivery_tag)
     except Exception:
         logger.exception(
-            "[worker] falha ao processar %s id=%s — indo pra DLQ",
+            "[email] falha ao processar %s id=%s — indo pra DLQ",
             routing_key,
             event_id,
         )
@@ -85,11 +94,6 @@ def _on_message(channel, method, properties, body) -> None:
 
 
 def _declare_topology(connection, exchange: str):
-    """Declara exchange principal, DLX, DLQ e fila principal com dead-letter.
-
-    Se a fila principal ja existe com argumentos diferentes (instancia antiga),
-    cai pra modo legacy sem DLQ e loga instrucao para reset.
-    """
     channel = connection.channel()
     channel.exchange_declare(
         exchange=exchange, exchange_type="topic", durable=True
@@ -99,29 +103,11 @@ def _declare_topology(connection, exchange: str):
     )
     channel.queue_declare(queue=DLQ_NAME, durable=True)
     channel.queue_bind(queue=DLQ_NAME, exchange=DLX_NAME)
-
-    try:
-        channel.queue_declare(
-            queue=QUEUE_NAME,
-            durable=True,
-            arguments={"x-dead-letter-exchange": DLX_NAME},
-        )
-    except ChannelClosedByBroker as exc:
-        if exc.reply_code == 406:
-            logger.warning(
-                "[worker] fila '%s' existe sem DLQ. "
-                "Rode 'docker compose down -v' para resetar o broker e ativar a DLQ. "
-                "Seguindo em modo legacy.",
-                QUEUE_NAME,
-            )
-            channel = connection.channel()
-            channel.exchange_declare(
-                exchange=exchange, exchange_type="topic", durable=True
-            )
-            channel.queue_declare(queue=QUEUE_NAME, durable=True)
-        else:
-            raise
-
+    channel.queue_declare(
+        queue=QUEUE_NAME,
+        durable=True,
+        arguments={"x-dead-letter-exchange": DLX_NAME},
+    )
     for pattern in BINDINGS:
         channel.queue_bind(
             queue=QUEUE_NAME, exchange=exchange, routing_key=pattern
@@ -140,7 +126,7 @@ def run() -> None:
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=_on_message)
 
     logger.info(
-        "[worker] consumindo exchange=%s queue=%s bindings=%s dlq=%s",
+        "[email] consumindo exchange=%s queue=%s bindings=%s dlq=%s",
         exchange,
         QUEUE_NAME,
         BINDINGS,
@@ -149,6 +135,6 @@ def run() -> None:
     try:
         channel.start_consuming()
     except KeyboardInterrupt:
-        logger.info("[worker] interrompido pelo usuario")
+        logger.info("[email] interrompido pelo usuario")
     finally:
         connection.close()

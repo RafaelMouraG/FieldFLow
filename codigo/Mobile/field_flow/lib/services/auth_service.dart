@@ -14,10 +14,10 @@ class AuthService {
   final ApiClient _client;
 
   Future<String> login(String email, String senha) async {
-    final res = await _client.post('/auth/login', body: {
-      'email': email,
-      'senha': senha,
-    });
+    final res = await _client.post(
+      '/auth/login',
+      body: {'email': email, 'senha': senha},
+    );
     return (res as Map<String, dynamic>)['access_token'] as String;
   }
 
@@ -30,17 +30,24 @@ class AuthService {
     required String documento,
     String? telefone,
   }) async {
-    final res = await _client.post('/auth/register', body: {
-      'nome': nome,
-      'email': email,
-      'senha': senha,
-      'tipo_documento': tipoDocumento,
-      'documento': documento,
-      'tipo': 'CLIENTE',
-      if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
-    }) as Map<String, dynamic>;
+    final res =
+        await _client.post(
+              '/auth/register',
+              body: {
+                'nome': nome,
+                'email': email,
+                'senha': senha,
+                'tipo_documento': tipoDocumento,
+                'documento': documento,
+                'tipo': 'CLIENTE',
+                if (telefone != null && telefone.isNotEmpty)
+                  'telefone': telefone,
+              },
+            )
+            as Map<String, dynamic>;
 
-    final token = (res['token'] as Map<String, dynamic>)['access_token'] as String;
+    final token =
+        (res['token'] as Map<String, dynamic>)['access_token'] as String;
     final usuario = Usuario.fromJson(res['usuario'] as Map<String, dynamic>);
     return AuthResult(token, usuario);
   }
@@ -49,4 +56,10 @@ class AuthService {
     final res = await _client.get('/auth/me');
     return Usuario.fromJson(res as Map<String, dynamic>);
   }
+
+  /// PUT /auth/me/senha — exige a senha atual; resposta 204 sem corpo.
+  Future<void> trocarSenha(String senhaAtual, String senhaNova) => _client.put(
+    '/auth/me/senha',
+    body: {'senha_atual': senhaAtual, 'senha_nova': senhaNova},
+  );
 }

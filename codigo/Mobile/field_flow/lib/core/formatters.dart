@@ -6,8 +6,7 @@ import '../models/enums.dart';
 class Fmt {
   Fmt._();
 
-  static final _moeda =
-      NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  static final _moeda = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
   static final _data = DateFormat('dd/MM/yyyy');
   static final _dataHora = DateFormat('dd/MM/yyyy HH:mm');
 

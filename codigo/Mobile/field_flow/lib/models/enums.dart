@@ -32,8 +32,10 @@ enum DemandaStatus {
   final String wire;
   final String label;
 
-  static DemandaStatus fromWire(String v) => values
-      .firstWhere((e) => e.wire == v, orElse: () => DemandaStatus.pendente);
+  static DemandaStatus fromWire(String v) => values.firstWhere(
+    (e) => e.wire == v,
+    orElse: () => DemandaStatus.pendente,
+  );
 }
 
 enum UnidadePagamento {
@@ -47,8 +49,10 @@ enum UnidadePagamento {
   final String wire;
   final String label;
 
-  static UnidadePagamento fromWire(String v) => values
-      .firstWhere((e) => e.wire == v, orElse: () => UnidadePagamento.fixo);
+  static UnidadePagamento fromWire(String v) => values.firstWhere(
+    (e) => e.wire == v,
+    orElse: () => UnidadePagamento.fixo,
+  );
 }
 
 enum StatusCandidatura {
@@ -62,6 +66,7 @@ enum StatusCandidatura {
   final String label;
 
   static StatusCandidatura fromWire(String v) => values.firstWhere(
-      (e) => e.wire == v,
-      orElse: () => StatusCandidatura.pendente);
+    (e) => e.wire == v,
+    orElse: () => StatusCandidatura.pendente,
+  );
 }

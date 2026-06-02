@@ -1,8 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Rede: consumir a API REST e baixar os tiles do mapa (OpenStreetMap). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- GPS: botao "usar minha localizacao" no seletor de local. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="field_flow"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
+        <!-- usesCleartextTraffic: permite HTTP (sem TLS) para a API na LAN
+             (ex.: http://<IP-do-PC>:8000). Em producao use HTTPS. -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

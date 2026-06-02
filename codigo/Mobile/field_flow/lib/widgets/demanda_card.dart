@@ -29,7 +29,9 @@ class DemandaCard extends StatelessWidget {
                     child: Text(
                       demanda.titulo,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -46,8 +48,11 @@ class DemandaCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Icon(Icons.location_on_outlined,
-                      size: 16, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -62,17 +67,24 @@ class DemandaCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.payments_outlined,
-                      size: 16, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.payments_outlined,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     Fmt.pagamento(
-                        demanda.valorRecompensa, demanda.unidadePagamento),
+                      demanda.valorRecompensa,
+                      demanda.unidadePagamento,
+                    ),
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const Spacer(),
-                  Text(Fmt.area(demanda.areaHectares),
-                      style: TextStyle(color: Colors.grey.shade600)),
+                  Text(
+                    Fmt.area(demanda.areaHectares),
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
                 ],
               ),
             ],

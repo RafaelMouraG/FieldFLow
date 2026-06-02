@@ -39,11 +39,17 @@ class DemandaDetailViewModel extends ChangeNotifier {
   int? _aceitandoId;
   int? get aceitandoId => _aceitandoId;
 
+  bool _concluindo = false;
+  bool get concluindo => _concluindo;
+
   int _ultimaContagem = 0;
   String? _mensagem;
 
   /// So pode aceitar propostas enquanto a demanda estiver PENDENTE.
   bool get podeAceitar => _demanda?.status == DemandaStatus.pendente;
+
+  /// O cliente so marca como concluido quando o servico esta EM_EXECUCAO.
+  bool get podeConcluir => _demanda?.status == DemandaStatus.emExecucao;
 
   /// Retorna (e limpa) uma mensagem transitoria para a View exibir uma vez.
   String? takeMensagem() {
@@ -96,6 +102,23 @@ class DemandaDetailViewModel extends ChangeNotifier {
       return e.message;
     } finally {
       _aceitandoId = null;
+      notifyListeners();
+    }
+  }
+
+  /// Marca a demanda como CONCLUIDO (EM_EXECUCAO -> CONCLUIDO).
+  /// Retorna `null` em sucesso ou a msg de erro.
+  Future<String?> concluir() async {
+    _concluindo = true;
+    notifyListeners();
+    try {
+      await _auth.demandas.atualizarStatus(demandaId, DemandaStatus.concluido);
+      await carregar();
+      return null;
+    } on ApiException catch (e) {
+      return e.message;
+    } finally {
+      _concluindo = false;
       notifyListeners();
     }
   }

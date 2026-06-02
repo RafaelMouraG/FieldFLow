@@ -18,8 +18,10 @@ class Config {
   static const String _prefsKey = 'api_base_url';
 
   /// Valor passado via `flutter run --dart-define=API_BASE_URL=...`.
-  static const String _fromEnv =
-      String.fromEnvironment('API_BASE_URL', defaultValue: '');
+  static const String _fromEnv = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
 
   static String _baseUrl = _platformDefault();
 

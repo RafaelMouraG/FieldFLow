@@ -6,6 +6,9 @@ import '../models/usuario.dart';
 import '../services/auth_service.dart';
 import '../services/candidatura_service.dart';
 import '../services/demanda_service.dart';
+import '../services/notificacao_service.dart';
+import '../services/prestador_service.dart';
+import '../services/usuario_service.dart';
 
 /// Sessao do app: guarda o token JWT e o usuario logado, expoe as services
 /// ja configuradas com o token atual e notifica a UI quando o login muda.
@@ -33,6 +36,9 @@ class AuthController extends ChangeNotifier {
   // Services prontas para as telas, sempre com o token vigente.
   DemandaService get demandas => DemandaService(_client);
   CandidaturaService get candidaturas => CandidaturaService(_client);
+  UsuarioService get usuarios => UsuarioService(_client);
+  PrestadorService get prestadores => PrestadorService(_client);
+  NotificacaoService get notificacoes => NotificacaoService(_client);
 
   /// Restaura o token salvo e revalida com GET /auth/me. Se o token expirou,
   /// limpa a sessao silenciosamente.
@@ -78,6 +84,33 @@ class AuthController extends ChangeNotifier {
     _usuario = res.usuario;
     notifyListeners();
   }
+
+  /// Atualiza dados do usuario logado (incl. endereco da fazenda) e reflete
+  /// na sessao.
+  Future<void> atualizarPerfil({
+    String? nome,
+    String? email,
+    String? telefone,
+    String? endereco,
+    double? enderecoLat,
+    double? enderecoLng,
+  }) async {
+    final id = _usuario!.id;
+    _usuario = await usuarios.atualizar(
+      id,
+      nome: nome,
+      email: email,
+      telefone: telefone,
+      endereco: endereco,
+      enderecoLat: enderecoLat,
+      enderecoLng: enderecoLng,
+    );
+    notifyListeners();
+  }
+
+  /// Troca a senha (exige a atual). Nao mexe na sessao/token.
+  Future<void> trocarSenha(String senhaAtual, String senhaNova) =>
+      _auth.trocarSenha(senhaAtual, senhaNova);
 
   Future<void> logout() async {
     await _limpar();

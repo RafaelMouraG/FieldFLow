@@ -46,12 +46,12 @@ class _RegisterViewState extends State<_RegisterView> {
   Future<void> _cadastrar() async {
     if (!_formKey.currentState!.validate()) return;
     final erro = await context.read<RegisterViewModel>().cadastrar(
-          nome: _nome.text,
-          email: _email.text,
-          senha: _senha.text,
-          documento: _documento.text,
-          telefone: _telefone.text,
-        );
+      nome: _nome.text,
+      email: _email.text,
+      senha: _senha.text,
+      documento: _documento.text,
+      telefone: _telefone.text,
+    );
     if (!mounted) return;
     if (erro != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +97,8 @@ class _RegisterViewState extends State<_RegisterView> {
                   controller: _telefone,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                      labelText: 'Telefone (opcional)'),
+                    labelText: 'Telefone (opcional)',
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -106,14 +107,18 @@ class _RegisterViewState extends State<_RegisterView> {
                       flex: 2,
                       child: DropdownButtonFormField<TipoDocumento>(
                         initialValue: vm.tipoDoc,
-                        decoration:
-                            const InputDecoration(labelText: 'Documento'),
+                        decoration: const InputDecoration(
+                          labelText: 'Documento',
+                        ),
                         items: TipoDocumento.values
-                            .map((t) => DropdownMenuItem(
-                                value: t, child: Text(t.wire)))
+                            .map(
+                              (t) => DropdownMenuItem(
+                                value: t,
+                                child: Text(t.wire),
+                              ),
+                            )
                             .toList(),
-                        onChanged: (v) =>
-                            vm.setTipoDoc(v ?? TipoDocumento.cpf),
+                        onChanged: (v) => vm.setTipoDoc(v ?? TipoDocumento.cpf),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -146,12 +151,14 @@ class _RegisterViewState extends State<_RegisterView> {
                 FilledButton(
                   onPressed: vm.enviando ? null : _cadastrar,
                   style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
                   child: vm.enviando
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text('Cadastrar'),
                 ),
               ],

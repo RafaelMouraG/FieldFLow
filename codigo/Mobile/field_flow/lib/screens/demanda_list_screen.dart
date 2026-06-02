@@ -28,17 +28,18 @@ class _DemandaListView extends StatelessWidget {
 
   Future<void> _abrirCriacao(BuildContext context) async {
     final vm = context.read<DemandaListViewModel>();
-    final criada = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const DemandaFormScreen()),
-    );
+    final criada = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const DemandaFormScreen()));
     if (criada == true) vm.carregar();
   }
 
   void _abrirDetalhe(BuildContext context, int id) {
     final vm = context.read<DemandaListViewModel>();
     Navigator.of(context)
-        .push(MaterialPageRoute(
-            builder: (_) => DemandaDetailScreen(demandaId: id)))
+        .push(
+          MaterialPageRoute(builder: (_) => DemandaDetailScreen(demandaId: id)),
+        )
         .then((_) => vm.carregar());
   }
 
@@ -64,8 +65,10 @@ class _DemandaListView extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text('Ola, ${usuario.nome}',
-                        style: TextStyle(color: Colors.grey.shade700)),
+                    child: Text(
+                      'Ola, ${usuario.nome}',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
                   ),
                 ),
               ),
@@ -116,8 +119,10 @@ class _VazioView extends StatelessWidget {
         const Center(child: Text('Nenhuma solicitacao ainda')),
         const SizedBox(height: 4),
         Center(
-          child: Text('Toque em "Nova solicitacao" para comecar',
-              style: TextStyle(color: Colors.grey.shade600)),
+          child: Text(
+            'Toque em "Nova solicitacao" para comecar',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
         ),
       ],
     );
@@ -143,7 +148,9 @@ class _ErroView extends StatelessWidget {
         const SizedBox(height: 16),
         Center(
           child: FilledButton.tonal(
-              onPressed: onRetry, child: const Text('Tentar novamente')),
+            onPressed: onRetry,
+            child: const Text('Tentar novamente'),
+          ),
         ),
       ],
     );

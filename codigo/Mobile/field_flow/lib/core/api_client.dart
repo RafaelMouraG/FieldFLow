@@ -20,9 +20,9 @@ class ApiClient {
   static const Duration _timeout = Duration(seconds: 15);
 
   Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
+    'Content-Type': 'application/json',
+    if (token != null) 'Authorization': 'Bearer $token',
+  };
 
   Uri _uri(String path) => Uri.parse('${Config.baseUrl}$path');
 
@@ -30,19 +30,18 @@ class ApiClient {
       _send(() => http.get(_uri(path), headers: _headers));
 
   Future<dynamic> post(String path, {Object? body}) => _send(
-        () => http.post(_uri(path),
-            headers: _headers, body: jsonEncode(body ?? {})),
-      );
+    () =>
+        http.post(_uri(path), headers: _headers, body: jsonEncode(body ?? {})),
+  );
 
   Future<dynamic> put(String path, {Object? body}) => _send(
-        () => http.put(_uri(path),
-            headers: _headers, body: jsonEncode(body ?? {})),
-      );
+    () => http.put(_uri(path), headers: _headers, body: jsonEncode(body ?? {})),
+  );
 
   Future<dynamic> patch(String path, {Object? body}) => _send(
-        () => http.patch(_uri(path),
-            headers: _headers, body: jsonEncode(body ?? {})),
-      );
+    () =>
+        http.patch(_uri(path), headers: _headers, body: jsonEncode(body ?? {})),
+  );
 
   Future<dynamic> delete(String path) =>
       _send(() => http.delete(_uri(path), headers: _headers));

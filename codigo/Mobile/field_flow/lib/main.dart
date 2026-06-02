@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'core/config.dart';
 import 'core/theme.dart';
-import 'screens/demanda_list_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'state/auth_controller.dart';
 
@@ -36,7 +36,7 @@ class FieldFlowApp extends StatelessWidget {
 }
 
 /// Decide a tela inicial conforme a sessao: splash enquanto restaura,
-/// login quando deslogado, listagem quando autenticado. Como observa o
+/// login quando deslogado, Home quando autenticado. Como observa o
 /// [AuthController], a troca login <-> logout e automatica.
 class _AuthGate extends StatelessWidget {
   const _AuthGate();
@@ -45,12 +45,8 @@ class _AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     if (auth.carregando) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return auth.autenticado
-        ? const DemandaListScreen()
-        : const LoginScreen();
+    return auth.autenticado ? const HomeScreen() : const LoginScreen();
   }
 }

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../core/formatters.dart';
 import '../models/enums.dart';
+import '../models/local_selecionado.dart';
 import '../state/auth_controller.dart';
 import '../viewmodels/demanda_form_viewmodel.dart';
+import 'location_picker_screen.dart';
 
 /// TELA 3 — Criacao de uma nova solicitacao (acao principal do cliente).
 ///
@@ -67,17 +70,53 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
     if (escolhida != null) vm.setDataLimite(escolhida);
   }
 
+  /// Abre o seletor de local no mapa. Pre-centra em: coordenada ja marcada >
+  /// endereco da fazenda (cliente CNPJ) > centro padrao. Ao confirmar, guarda
+  /// as coordenadas no VM e usa o rotulo no campo de texto.
+  Future<void> _marcarLocal({required bool origem}) async {
+    final vm = context.read<DemandaFormViewModel>();
+    final campo = origem ? _origem : _destino;
+
+    LatLng? inicial;
+    if (origem && vm.origemMarcada) {
+      inicial = LatLng(vm.origemLat!, vm.origemLng!);
+    } else if (!origem && vm.destinoMarcado) {
+      inicial = LatLng(vm.destinoLat!, vm.destinoLng!);
+    } else if (vm.fazendaLat != null && vm.fazendaLng != null) {
+      inicial = LatLng(vm.fazendaLat!, vm.fazendaLng!);
+    }
+
+    final r = await Navigator.of(context).push<LocalSelecionado>(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerScreen(
+          inicial: inicial,
+          rotuloInicial: campo.text.isNotEmpty
+              ? campo.text
+              : vm.fazendaEndereco,
+          titulo: origem ? 'Local da tarefa' : 'Destino',
+        ),
+      ),
+    );
+    if (r == null) return;
+    if (origem) {
+      vm.setOrigemCoord(r.lat, r.lng);
+    } else {
+      vm.setDestinoCoord(r.lat, r.lng);
+    }
+    if (r.rotulo.isNotEmpty) campo.text = r.rotulo;
+  }
+
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
     final erro = await context.read<DemandaFormViewModel>().salvar(
-          titulo: _titulo.text,
-          descricao: _descricao.text,
-          origem: _origem.text,
-          destino: _destino.text,
-          areaHectares: _parseNum(_area.text) ?? 0,
-          tipoServico: _tipoServico.text,
-          valorRecompensa: _parseNum(_valor.text),
-        );
+      titulo: _titulo.text,
+      descricao: _descricao.text,
+      origem: _origem.text,
+      destino: _destino.text,
+      areaHectares: _parseNum(_area.text) ?? 0,
+      tipoServico: _tipoServico.text,
+      valorRecompensa: _parseNum(_valor.text),
+    );
     if (!mounted) return;
     if (erro != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,8 +144,9 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   controller: _titulo,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                      labelText: 'Titulo',
-                      hintText: 'Ex.: Pulverizacao de soja'),
+                    labelText: 'Titulo',
+                    hintText: 'Ex.: Pulverizacao de soja',
+                  ),
                   validator: _obrigatorio,
                 ),
                 const SizedBox(height: 16),
@@ -114,8 +154,9 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   controller: _tipoServico,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                      labelText: 'Tipo de servico',
-                      hintText: 'Ex.: Pulverizacao, Colheita, Transporte'),
+                    labelText: 'Tipo de servico',
+                    hintText: 'Ex.: Pulverizacao, Colheita, Transporte',
+                  ),
                   validator: _obrigatorio,
                 ),
                 const SizedBox(height: 16),
@@ -124,7 +165,9 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   maxLines: 3,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                      labelText: 'Descricao', alignLabelWithHint: true),
+                    labelText: 'Descricao',
+                    alignLabelWithHint: true,
+                  ),
                   validator: _obrigatorio,
                 ),
                 const SizedBox(height: 16),
@@ -132,27 +175,46 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   controller: _origem,
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
-                      labelText: 'Origem / local',
-                      hintText: 'Ex.: Fazenda Boa Vista, Uberaba-MG'),
+                    labelText: 'Origem / local',
+                    hintText: 'Ex.: Fazenda Boa Vista, Uberaba-MG',
+                  ),
                   validator: _obrigatorio,
+                ),
+                const SizedBox(height: 8),
+                _MapaTile(
+                  marcado: vm.origemMarcada,
+                  resumo: vm.origemResumo,
+                  rotulo: 'Marcar local da tarefa no mapa',
+                  onTap: () => _marcarLocal(origem: true),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _destino,
                   textCapitalization: TextCapitalization.words,
-                  decoration:
-                      const InputDecoration(labelText: 'Destino (opcional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Destino (opcional)',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _MapaTile(
+                  marcado: vm.destinoMarcado,
+                  resumo: vm.destinoResumo,
+                  rotulo: 'Marcar destino no mapa (opcional)',
+                  onTap: () => _marcarLocal(origem: false),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _area,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                   ],
                   decoration: const InputDecoration(
-                      labelText: 'Area (hectares)', suffixText: 'ha'),
+                    labelText: 'Area (hectares)',
+                    suffixText: 'ha',
+                  ),
                   validator: (v) {
                     final n = _parseNum(v ?? '');
                     if (n == null || n <= 0) return 'Informe uma area valida';
@@ -162,26 +224,30 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<UnidadePagamento>(
                   initialValue: vm.unidade,
-                  decoration:
-                      const InputDecoration(labelText: 'Forma de pagamento'),
+                  decoration: const InputDecoration(
+                    labelText: 'Forma de pagamento',
+                  ),
                   items: UnidadePagamento.values
-                      .map((u) =>
-                          DropdownMenuItem(value: u, child: Text(u.label)))
+                      .map(
+                        (u) => DropdownMenuItem(value: u, child: Text(u.label)),
+                      )
                       .toList(),
-                  onChanged: (v) =>
-                      vm.setUnidade(v ?? UnidadePagamento.fixo),
+                  onChanged: (v) => vm.setUnidade(v ?? UnidadePagamento.fixo),
                 ),
                 const SizedBox(height: 16),
                 if (vm.exigeValor)
                   TextFormField(
                     controller: _valor,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                     ],
                     decoration: const InputDecoration(
-                        labelText: 'Valor', prefixText: 'R\$ '),
+                      labelText: 'Valor',
+                      prefixText: 'R\$ ',
+                    ),
                     validator: (v) {
                       if (!vm.exigeValor) return null;
                       final n = _parseNum(v ?? '');
@@ -194,9 +260,11 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.event_outlined),
                   title: const Text('Data limite (opcional)'),
-                  subtitle: Text(vm.dataLimite == null
-                      ? 'Sem prazo'
-                      : Fmt.data(vm.dataLimite)),
+                  subtitle: Text(
+                    vm.dataLimite == null
+                        ? 'Sem prazo'
+                        : Fmt.data(vm.dataLimite),
+                  ),
                   trailing: vm.dataLimite == null
                       ? const Icon(Icons.chevron_right)
                       : IconButton(
@@ -209,12 +277,14 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                 FilledButton(
                   onPressed: vm.enviando ? null : _salvar,
                   style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
                   child: vm.enviando
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text('Publicar solicitacao'),
                 ),
               ],
@@ -227,4 +297,47 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
 
   String? _obrigatorio(String? v) =>
       (v == null || v.trim().isEmpty) ? 'Campo obrigatorio' : null;
+}
+
+/// Botao que abre o mapa e mostra se o local ja foi marcado (com as coords).
+class _MapaTile extends StatelessWidget {
+  const _MapaTile({
+    required this.marcado,
+    required this.resumo,
+    required this.rotulo,
+    required this.onTap,
+  });
+
+  final bool marcado;
+  final String? resumo;
+  final String rotulo;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme.primary;
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        side: BorderSide(color: marcado ? cor : Colors.grey.shade400),
+      ),
+      icon: Icon(
+        marcado ? Icons.check_circle : Icons.add_location_alt_outlined,
+        color: marcado ? cor : Colors.grey.shade600,
+      ),
+      label: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(marcado ? 'Local marcado' : rotulo),
+          if (marcado && resumo != null)
+            Text(
+              resumo!,
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+        ],
+      ),
+    );
+  }
 }

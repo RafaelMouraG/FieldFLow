@@ -10,9 +10,7 @@ class DemandaService {
   /// GET /demandas — para um cliente, retorna apenas as suas demandas.
   Future<List<Demanda>> listMinhas() async {
     final res = await _client.get('/demandas') as List<dynamic>;
-    return res
-        .map((e) => Demanda.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return res.map((e) => Demanda.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<Demanda> obter(int id) async {
@@ -29,6 +27,10 @@ class DemandaService {
     required UnidadePagamento unidadePagamento,
     required String tipoServico,
     String? destino,
+    double? origemLat,
+    double? origemLng,
+    double? destinoLat,
+    double? destinoLng,
     double? valorRecompensa,
     DateTime? dataLimite,
   }) async {
@@ -40,12 +42,28 @@ class DemandaService {
       'unidade_pagamento': unidadePagamento.wire,
       'tipo_servico': tipoServico,
       if (destino != null && destino.isNotEmpty) 'destino': destino,
+      'origem_lat': ?origemLat,
+      'origem_lng': ?origemLng,
+      'destino_lat': ?destinoLat,
+      'destino_lng': ?destinoLng,
       'valor_recompensa': ?valorRecompensa,
       if (dataLimite != null)
-        'data_limite':
-            dataLimite.toIso8601String().split('T').first, // YYYY-MM-DD
+        'data_limite': dataLimite
+            .toIso8601String()
+            .split('T')
+            .first, // YYYY-MM-DD
     };
     final res = await _client.post('/demandas', body: body);
+    return Demanda.fromJson(res as Map<String, dynamic>);
+  }
+
+  /// PATCH /demandas/{id}/status — transiciona o status (ex.: cliente marca
+  /// EM_EXECUCAO -> CONCLUIDO). O backend valida quem pode fazer cada transicao.
+  Future<Demanda> atualizarStatus(int id, DemandaStatus status) async {
+    final res = await _client.patch(
+      '/demandas/$id/status',
+      body: {'status': status.wire},
+    );
     return Demanda.fromJson(res as Map<String, dynamic>);
   }
 

@@ -42,9 +42,10 @@ class _LoginViewState extends State<_LoginView> {
 
   Future<void> _entrar() async {
     if (!_formKey.currentState!.validate()) return;
-    final erro = await context
-        .read<LoginViewModel>()
-        .entrar(_email.text, _senha.text);
+    final erro = await context.read<LoginViewModel>().entrar(
+      _email.text,
+      _senha.text,
+    );
     if (erro != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(erro), backgroundColor: Colors.red.shade700),
@@ -68,19 +69,24 @@ class _LoginViewState extends State<_LoginView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.agriculture,
-                        size: 72, color: Color(0xFF2E7D32)),
+                    const Icon(
+                      Icons.agriculture,
+                      size: 72,
+                      color: Color(0xFF2E7D32),
+                    ),
                     const SizedBox(height: 12),
-                    Text('FieldFlow',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      'FieldFlow',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 4),
-                    Text('Marketplace de servicos agricolas',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey.shade600)),
+                    Text(
+                      'Marketplace de servicos agricolas',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
                     const SizedBox(height: 32),
                     TextFormField(
                       controller: _email,
@@ -102,9 +108,11 @@ class _LoginViewState extends State<_LoginView> {
                         labelText: 'Senha',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
-                          icon: Icon(_mostrarSenha
-                              ? Icons.visibility_off
-                              : Icons.visibility),
+                          icon: Icon(
+                            _mostrarSenha
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
                           onPressed: () =>
                               setState(() => _mostrarSenha = !_mostrarSenha),
                         ),
@@ -117,13 +125,13 @@ class _LoginViewState extends State<_LoginView> {
                     FilledButton(
                       onPressed: enviando ? null : _entrar,
                       style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16)),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
                       child: enviando
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Entrar'),
                     ),
@@ -131,8 +139,11 @@ class _LoginViewState extends State<_LoginView> {
                     TextButton(
                       onPressed: enviando
                           ? null
-                          : () => Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => const RegisterScreen())),
+                          : () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
+                              ),
+                            ),
                       child: const Text('Criar conta de cliente'),
                     ),
                     const Divider(height: 32),
@@ -158,8 +169,9 @@ class _ServidorTile extends StatefulWidget {
 }
 
 class _ServidorTileState extends State<_ServidorTile> {
-  late final TextEditingController _url =
-      TextEditingController(text: Config.baseUrl);
+  late final TextEditingController _url = TextEditingController(
+    text: Config.baseUrl,
+  );
 
   @override
   void dispose() {
@@ -171,9 +183,9 @@ class _ServidorTileState extends State<_ServidorTile> {
     await Config.setBaseUrl(_url.text);
     if (!mounted) return;
     setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Servidor: ${Config.baseUrl}')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Servidor: ${Config.baseUrl}')));
   }
 
   @override
@@ -183,8 +195,11 @@ class _ServidorTileState extends State<_ServidorTile> {
       childrenPadding: const EdgeInsets.only(bottom: 8),
       leading: const Icon(Icons.dns_outlined),
       title: const Text('Servidor'),
-      subtitle: Text(Config.baseUrl,
-          maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        Config.baseUrl,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       children: [
         TextField(
           controller: _url,

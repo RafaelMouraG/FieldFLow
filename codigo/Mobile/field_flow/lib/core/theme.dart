@@ -7,18 +7,18 @@ class AppTheme {
   static const Color seed = Color(0xFF2E7D32);
 
   static ThemeData get light => ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: seed),
-        appBarTheme: const AppBarTheme(centerTitle: false),
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade300),
-          ),
-        ),
-      );
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(seedColor: seed),
+    appBarTheme: const AppBarTheme(centerTitle: false),
+    inputDecorationTheme: const InputDecorationTheme(
+      border: OutlineInputBorder(),
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+    ),
+  );
 }

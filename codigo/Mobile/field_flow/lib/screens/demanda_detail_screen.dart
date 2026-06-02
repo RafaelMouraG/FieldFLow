@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import '../core/formatters.dart';
 import '../models/candidatura.dart';
 import '../models/demanda.dart';
+import '../models/enums.dart';
 import '../state/auth_controller.dart';
 import '../viewmodels/demanda_detail_viewmodel.dart';
 import '../widgets/candidatura_card.dart';
+import '../widgets/map_preview.dart';
 import '../widgets/status_chip.dart';
+import 'prestador_profile_screen.dart';
 
 /// TELA 2 — Detalhe da demanda + propostas (candidaturas) recebidas.
 ///
@@ -55,8 +58,7 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
   void _onVmChanged() {
     final msg = _vm.takeMensagem();
     if (msg != null && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -66,8 +68,30 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
     ScaffoldMessenger.of(context).showSnackBar(
       erro == null
           ? const SnackBar(content: Text('Proposta aceita!'))
-          : SnackBar(
-              content: Text(erro), backgroundColor: Colors.red.shade700),
+          : SnackBar(content: Text(erro), backgroundColor: Colors.red.shade700),
+    );
+  }
+
+  Future<void> _concluir() async {
+    final erro = await _vm.concluir();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      erro == null
+          ? const SnackBar(content: Text('Servico marcado como concluido!'))
+          : SnackBar(content: Text(erro), backgroundColor: Colors.red.shade700),
+    );
+  }
+
+  void _abrirPrestador(Candidatura c) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PrestadorProfileScreen(
+          prestadorId: c.prestadorId,
+          podeAceitar:
+              _vm.podeAceitar && c.status == StatusCandidatura.pendente,
+          onAceitar: () => _aceitar(c),
+        ),
+      ),
     );
   }
 
@@ -94,8 +118,9 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
               Text(vm.erro!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               FilledButton.tonal(
-                  onPressed: () => vm.carregar(),
-                  child: const Text('Tentar novamente')),
+                onPressed: () => vm.carregar(),
+                child: const Text('Tentar novamente'),
+              ),
             ],
           ),
         ),
@@ -109,14 +134,19 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
         padding: const EdgeInsets.only(bottom: 32),
         children: [
           _Cabecalho(demanda: d),
+          _acaoStatus(vm),
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
-                Text('Propostas (${vm.candidaturas.length})',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  'Propostas (${vm.candidaturas.length})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
                 const _PollingBadge(),
               ],
@@ -134,13 +164,79 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
               ),
             )
           else
-            ...vm.candidaturas.map((c) => CandidaturaCard(
-                  candidatura: c,
-                  podeAceitar: vm.podeAceitar,
-                  aceitando: vm.aceitandoId == c.id,
-                  onAceitar: () => _aceitar(c),
-                )),
+            ...vm.candidaturas.map(
+              (c) => CandidaturaCard(
+                candidatura: c,
+                podeAceitar: vm.podeAceitar,
+                aceitando: vm.aceitandoId == c.id,
+                onAceitar: () => _aceitar(c),
+                onTap: () => _abrirPrestador(c),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  /// Acao/contexto conforme o status: aviso quando aceito (aguardando o
+  /// prestador iniciar) e botao "Marcar como concluido" quando em execucao.
+  Widget _acaoStatus(DemandaDetailViewModel vm) {
+    final status = vm.demanda?.status;
+    if (status == DemandaStatus.aceito) {
+      return const _AvisoStatus(
+        icone: Icons.schedule,
+        texto: 'Proposta aceita. Aguardando o prestador iniciar o servico.',
+      );
+    }
+    if (status == DemandaStatus.emExecucao) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: vm.concluindo ? null : _concluir,
+            icon: vm.concluindo
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check_circle_outline),
+            label: Text(
+              vm.concluindo ? 'Concluindo...' : 'Marcar como concluido',
+            ),
+          ),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+}
+
+/// Faixa informativa de status (sem acao).
+class _AvisoStatus extends StatelessWidget {
+  const _AvisoStatus({required this.icone, required this.texto});
+  final IconData icone;
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(icone, size: 18, color: Colors.blue.shade700),
+            const SizedBox(width: 10),
+            Expanded(child: Text(texto)),
+          ],
+        ),
       ),
     );
   }
@@ -161,9 +257,13 @@ class _Cabecalho extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(d.titulo,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
+                child: Text(
+                  d.titulo,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               DemandaStatusChip(d.status),
@@ -178,10 +278,17 @@ class _Cabecalho extends StatelessWidget {
           if (d.destino != null && d.destino!.isNotEmpty)
             _Linha(Icons.flag_outlined, 'Destino', d.destino!),
           _Linha(Icons.crop_outlined, 'Area', Fmt.area(d.areaHectares)),
-          _Linha(Icons.payments_outlined, 'Pagamento',
-              Fmt.pagamento(d.valorRecompensa, d.unidadePagamento)),
+          _Linha(
+            Icons.payments_outlined,
+            'Pagamento',
+            Fmt.pagamento(d.valorRecompensa, d.unidadePagamento),
+          ),
           if (d.dataLimite != null)
             _Linha(Icons.event_outlined, 'Data limite', Fmt.data(d.dataLimite)),
+          if (d.temLocalizacao) ...[
+            const SizedBox(height: 16),
+            MapPreview(lat: d.origemLat!, lng: d.origemLng!, rotulo: d.origem),
+          ],
         ],
       ),
     );
@@ -205,10 +312,13 @@ class _Linha extends StatelessWidget {
           const SizedBox(width: 10),
           SizedBox(
             width: 90,
-            child: Text(rotulo,
-                style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500)),
+            child: Text(
+              rotulo,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Expanded(child: Text(valor)),
         ],
@@ -230,11 +340,15 @@ class _PollingBadge extends StatelessWidget {
           width: 12,
           height: 12,
           child: CircularProgressIndicator(
-              strokeWidth: 2, color: Colors.grey.shade400),
+            strokeWidth: 2,
+            color: Colors.grey.shade400,
+          ),
         ),
         const SizedBox(width: 6),
-        Text('atualizando',
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+        Text(
+          'atualizando',
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+        ),
       ],
     );
   }

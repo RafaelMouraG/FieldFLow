@@ -8,11 +8,11 @@ class DemandaStatusChip extends StatelessWidget {
   final DemandaStatus status;
 
   Color get _cor => switch (status) {
-        DemandaStatus.pendente => Colors.orange,
-        DemandaStatus.aceito => Colors.blue,
-        DemandaStatus.emExecucao => Colors.purple,
-        DemandaStatus.concluido => Colors.green,
-      };
+    DemandaStatus.pendente => Colors.orange,
+    DemandaStatus.aceito => Colors.blue,
+    DemandaStatus.emExecucao => Colors.purple,
+    DemandaStatus.concluido => Colors.green,
+  };
 
   @override
   Widget build(BuildContext context) => _Pill(label: status.label, cor: _cor);
@@ -24,11 +24,11 @@ class CandidaturaStatusChip extends StatelessWidget {
   final StatusCandidatura status;
 
   Color get _cor => switch (status) {
-        StatusCandidatura.pendente => Colors.orange,
-        StatusCandidatura.aceita => Colors.green,
-        StatusCandidatura.rejeitada => Colors.red,
-        StatusCandidatura.cancelada => Colors.grey,
-      };
+    StatusCandidatura.pendente => Colors.orange,
+    StatusCandidatura.aceita => Colors.green,
+    StatusCandidatura.rejeitada => Colors.red,
+    StatusCandidatura.cancelada => Colors.grey,
+  };
 
   @override
   Widget build(BuildContext context) => _Pill(label: status.label, cor: _cor);

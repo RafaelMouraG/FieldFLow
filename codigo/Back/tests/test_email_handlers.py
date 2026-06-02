@@ -51,9 +51,12 @@ def test_candidatura_criada_notifica_o_cliente(
 
     # Email vai para o CLIENTE dono da demanda, nao para o prestador.
     assert notifier.recipients() == [cliente.email]
-    to, subject, body = notifier.sent[0]
+    to, subject, body, html = notifier.sent[0]
     assert demanda.titulo in subject
+    # Nome do prestador aparece tanto no fallback texto quanto no HTML bonito.
     assert prestador_aprovado.nome in body
+    assert prestador_aprovado.nome in html
+    assert html.lstrip().startswith("<!doctype html>")
     # Auditoria gravada (flush) com o event_id.
     assert emails_repository.get_by_event_id(db, "evt-1") is not None
 

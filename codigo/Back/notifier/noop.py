@@ -10,7 +10,13 @@ class NoopEmailNotifier(EmailNotifier):
     configurado (dev/CI) ou em testes. Mantem o fluxo de mensageria observavel
     sem depender de credenciais externas."""
 
-    def send(self, to: str, subject: str, body: str) -> None:
+    def send(
+        self, to: str, subject: str, body: str, html_body: str | None = None
+    ) -> None:
         logger.info(
-            "[EMAIL-NOOP] para=%s assunto=%r corpo=%r", to, subject, body
+            "[EMAIL-NOOP] para=%s assunto=%r html=%s corpo=%r",
+            to,
+            subject,
+            bool(html_body),
+            body,
         )

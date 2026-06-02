@@ -32,12 +32,17 @@ class SmtpEmailNotifier(EmailNotifier):
         self._use_tls = use_tls
         self._timeout = timeout
 
-    def send(self, to: str, subject: str, body: str) -> None:
+    def send(
+        self, to: str, subject: str, body: str, html_body: str | None = None
+    ) -> None:
         message = EmailMessage()
         message["From"] = self._from_addr
         message["To"] = to
         message["Subject"] = subject
         message.set_content(body)
+        if html_body:
+            # Vira multipart/alternative: texto primeiro (fallback), HTML depois.
+            message.add_alternative(html_body, subtype="html")
 
         try:
             with smtplib.SMTP(

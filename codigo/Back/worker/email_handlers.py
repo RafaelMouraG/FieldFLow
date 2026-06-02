@@ -15,6 +15,7 @@ from emails.infrastructure.database import repository as emails_repository
 from emails.infrastructure.database.models import EmailEnviado
 from notifier.interface import EmailNotifier
 from usuarios.infrastructure.database import repository as usuarios_repository
+from worker import email_templates as templates
 
 logger = logging.getLogger(__name__)
 
@@ -69,21 +70,16 @@ def notificar_candidatura_criada(
     prestador = usuarios_repository.get_by_id(db, prestador_id)
     nome_prestador = prestador.nome if prestador else "Um prestador"
 
-    assunto = f"Nova candidatura na sua demanda: {demanda.titulo}"
-    corpo = (
-        f"Ola, {cliente.nome}!\n\n"
-        f"{nome_prestador} se candidatou a sua demanda "
-        f'"{demanda.titulo}".\n\n'
-        "Acesse o FieldFlow para revisar a candidatura e decidir.\n\n"
-        "-- Equipe FieldFlow"
+    email = templates.candidatura_criada(
+        cliente.nome, nome_prestador, demanda.titulo
     )
-    notifier.send(cliente.email, assunto, corpo)
+    notifier.send(cliente.email, email.subject, email.text, email.html)
     _registrar(
         db,
         event_id=event_id,
         routing_key="candidatura.criada",
         destinatario=cliente.email,
-        assunto=assunto,
+        assunto=email.subject,
     )
     logger.info(
         "[email] candidatura.criada notificada ao cliente=%s", cliente.email
@@ -113,20 +109,14 @@ def notificar_candidatura_aceita(
     demanda = demandas_repository.get_by_id(db, demanda_id) if demanda_id else None
     titulo = demanda.titulo if demanda else "a demanda"
 
-    assunto = "Sua candidatura foi aceita!"
-    corpo = (
-        f"Parabens, {prestador.nome}!\n\n"
-        f'Sua candidatura para "{titulo}" foi aceita pelo cliente.\n\n'
-        "Acesse o FieldFlow para combinar os proximos passos da execucao.\n\n"
-        "-- Equipe FieldFlow"
-    )
-    notifier.send(prestador.email, assunto, corpo)
+    email = templates.candidatura_aceita(prestador.nome, titulo)
+    notifier.send(prestador.email, email.subject, email.text, email.html)
     _registrar(
         db,
         event_id=event_id,
         routing_key="candidatura.aceita",
         destinatario=prestador.email,
-        assunto=assunto,
+        assunto=email.subject,
     )
     logger.info(
         "[email] candidatura.aceita notificada ao prestador=%s",

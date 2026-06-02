@@ -44,10 +44,12 @@ class FakeEmailNotifier(EmailNotifier):
     """Captura os emails 'enviados' em memoria, sem tocar em SMTP."""
 
     def __init__(self) -> None:
-        self.sent: list[tuple[str, str, str]] = []
+        self.sent: list[tuple[str, str, str, str | None]] = []
 
-    def send(self, to: str, subject: str, body: str) -> None:
-        self.sent.append((to, subject, body))
+    def send(
+        self, to: str, subject: str, body: str, html_body: str | None = None
+    ) -> None:
+        self.sent.append((to, subject, body, html_body))
 
     def recipients(self) -> list[str]:
         return [s[0] for s in self.sent]

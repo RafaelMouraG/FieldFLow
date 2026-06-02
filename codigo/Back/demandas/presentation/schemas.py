@@ -11,6 +11,10 @@ class DemandaBase(BaseModel):
     descricao: str
     origem: str
     destino: Optional[str] = None
+    origem_lat: Optional[float] = None
+    origem_lng: Optional[float] = None
+    destino_lat: Optional[float] = None
+    destino_lng: Optional[float] = None
     area_hectares: float
     valor_recompensa: Optional[float] = Field(default=None, ge=0)
     unidade_pagamento: UnidadePagamento = UnidadePagamento.FIXO

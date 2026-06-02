@@ -32,6 +32,12 @@ class Demanda(Base):
     descricao = Column(String, nullable=False)
     origem = Column(String, nullable=False)
     destino = Column(String, nullable=True)
+    # Coordenadas do local da tarefa (talhao). O texto origem/destino e o rotulo
+    # legivel; lat/lng dao o ponto exato para o prestador navegar (Maps).
+    origem_lat = Column(Float, nullable=True)
+    origem_lng = Column(Float, nullable=True)
+    destino_lat = Column(Float, nullable=True)
+    destino_lng = Column(Float, nullable=True)
     area_hectares = Column(Float, nullable=False)
     valor_recompensa = Column(Float, nullable=True)
     unidade_pagamento = Column(

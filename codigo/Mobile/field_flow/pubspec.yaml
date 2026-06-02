@@ -35,6 +35,15 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # HTTP client para consumir a API REST do backend (camada services).
+  http: ^1.2.2
+  # Gerencia de estado (AuthController via ChangeNotifier/Provider).
+  provider: ^6.1.2
+  # Persiste o token JWT e a URL do servidor entre execucoes.
+  shared_preferences: ^2.3.2
+  # Formatacao de datas/moeda (pt_BR).
+  intl: ^0.20.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

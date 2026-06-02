@@ -1,30 +1,29 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
+// Smoke test do FieldFlow: sem sessao salva, o app deve abrir na tela de login.
+import 'package:field_flow/core/config.dart';
 import 'package:field_flow/main.dart';
+import 'package:field_flow/state/auth_controller.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('abre na tela de login quando nao ha sessao',
+      (WidgetTester tester) async {
+    // Sem token salvo -> nao autenticado, sem chamadas de rede.
+    SharedPreferences.setMockInitialValues({});
+    await Config.load();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    final auth = AuthController();
+    await auth.restaurarSessao();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(value: auth, child: const FieldFlowApp()),
+    );
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Titulo da marca e o botao de entrar estao presentes.
+    expect(find.text('FieldFlow'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Criar conta de cliente'), findsOneWidget);
   });
 }

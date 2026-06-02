@@ -57,6 +57,19 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  email_worker:
+    build:
+      context: ../codigo/Back
+    container_name: fieldflow_email_worker
+    command: ["python", "-m", "worker", "email"]
+    env_file:
+      - ../.env
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   rabbitmq_data:

@@ -68,6 +68,7 @@ O **FieldFlow** resolve esse gargalo centralizando a demanda e otimizando a log�
 - ✅ **Validação de Perfil Assíncrona:** Worker valida currículo (experiência + certificações) e aprova/reprova via eventos
 - 🔁 **Aceite com Rejeição em Cascata:** Ao aceitar uma candidatura, o worker rejeita automaticamente as concorrentes
 - 📨 **Comunicação 100% Assíncrona:** API publica eventos no RabbitMQ; worker em processo separado consome e reage
+- 📧 **Notificações por Email (Pub-Sub):** Um segundo consumidor independente reage aos mesmos eventos e notifica o usuário por email (SMTP)
 - 🔄 **Fluxo de Status Orientado a Eventos:** Ciclo `PENDENTE → ACEITO → EM_EXECUCAO → CONCLUIDO`
 - 🛡️ **Idempotência + DLQ:** `event_id` único por mensagem; falhas vão para Dead-Letter Queue
 - 📱 **App Móvel para o Cliente:** Interface Flutter *(Sprint 3 — pendente)*
@@ -119,7 +120,7 @@ O **FieldFlow** resolve esse gargalo centralizando a demanda e otimizando a log�
 
 ## 🏛 Arquitetura
 
-O sistema adota uma **Arquitetura Orientada a Eventos (EDA)** com dois aplicativos móveis (cliente e prestador), um backend REST, um worker consumidor de eventos e um MOM (RabbitMQ) para comunicação assíncrona.
+O sistema adota uma **Arquitetura Orientada a Eventos (EDA)** com dois aplicativos móveis (cliente e prestador), um backend REST, **dois workers consumidores independentes** (negócio e email) e um MOM (RabbitMQ) para comunicação assíncrona.
 
 Diagramas completos: [`Documentos/Sprint 1/diagrama-arquitetura.md`](Documentos/Sprint%201/diagrama-arquitetura.md).
 Catálogo de eventos: [`Documentos/Sprint 2/eventos-mom.md`](Documentos/Sprint%202/eventos-mom.md).
@@ -138,15 +139,40 @@ App Prestador (Flutter) ──REST/JSON──▶  │ FieldFlow API       │   
                                         │ exchange topic      │              │
                                         │ fieldflow.events    │              │
                                         └──────────┬──────────┘              │
-                                                   │ consume                 │
-                                                   ▼                         │
-                                        ┌─────────────────────┐              │
-                                        │ fieldflow_worker    │──INSERT/UPDATE
-                                        │ (processo separado) │
-                                        └─────────────────────┘
+                                          consume   │   consume               │
+                                        ┌───────────┴───────────┐             │
+                                        ▼                       ▼             │
+                            ┌─────────────────────┐  ┌─────────────────────┐  │
+                            │ fieldflow_worker    │  │ fieldflow_email_    │  │
+                            │ (negócio)           │  │ worker (SMTP)       │  │
+                            │ fila .notificacoes  │  │ fila .emails        │  │
+                            └──────────┬──────────┘  └─────────────────────┘  │
+                                       └──INSERT/UPDATE──────────────────────┘
 ```
 
 A API e o worker **não trocam HTTP entre si** — toda integração passa pelo broker. Mensagens com falha vão para `fieldflow.notificacoes.dlq` via DLX.
+
+### 📧 Notificações por Email (fan-out / Publish-Subscribe)
+
+Um **segundo consumidor independente** (`email_worker`) reage aos mesmos eventos do
+`topic exchange`, com fila própria `fieldflow.emails`. Como o exchange é `topic`,
+cada evento é entregue **em cópia** a ambas as filas — os dois consumidores rodam
+em processos separados e isolados:
+
+```
+                          ┌─▶ fieldflow.notificacoes ──▶ worker      (auditoria + regras)
+fieldflow.events (topic) ─┤
+                          └─▶ fieldflow.emails       ──▶ email_worker (SMTP → usuário)
+```
+
+- `candidatura.criada` → email ao **cliente** dono da demanda ("fulano se candidatou").
+- `candidatura.aceita` → email ao **prestador** escolhido ("sua candidatura foi aceita").
+
+Isolamento e robustez: uma falha de SMTP manda a mensagem para
+`fieldflow.emails.dlq` (DLX próprio) **sem afetar** o worker de negócio. A tabela
+`emails_enviados` (UNIQUE em `event_id`) garante **idempotência** — redelivery do
+broker não dispara email duplicado. O provedor de envio fica atrás da interface
+`EmailNotifier` (DIP): sem credenciais SMTP, cai no `NoopEmailNotifier` (apenas loga).
 
 ### Organização do Backend (Clean Architecture por Bounded Context)
 
@@ -168,8 +194,10 @@ Cada módulo de domínio segue o mesmo molde de 4 camadas:
 | `demandas/` | Solicitações do cliente e transições de status |
 | `candidaturas/` | Propostas de prestadores para demandas + aceite |
 | `notificacoes/` | Tabela de auditoria dos eventos consumidos (evidência da Sprint 2) |
+| `emails/` | Tabela `emails_enviados` (auditoria + idempotência do worker de email) |
 | `mom/` | Interface `EventPublisher` (DIP) + impl. RabbitMQ + Noop |
-| `worker/` | Processo separado que consome `fieldflow.notificacoes` e dispara reações |
+| `notifier/` | Interface `EmailNotifier` (DIP) + impl. SMTP + Noop |
+| `worker/` | Dois consumidores: negócio (`fieldflow.notificacoes`) e email (`fieldflow.emails`) |
 | `core/` | Configurações (pydantic-settings) e sessão SQLAlchemy |
 | `alembic/` | Versionamento do schema |
 
@@ -199,8 +227,19 @@ Crie um arquivo `.env` na raiz do projeto com base nas variáveis abaixo:
 | `JWT_SECRET` | Segredo para assinatura dos tokens | `troque_em_producao` |
 | `JWT_ALGORITHM` | Algoritmo do JWT | `HS256` |
 | `JWT_EXPIRES_MINUTES` | TTL do token em minutos | `1440` |
+| `SMTP_HOST` | Servidor SMTP *(opcional)* | `smtp.gmail.com` |
+| `SMTP_PORT` | Porta SMTP *(opcional)* | `587` |
+| `SMTP_USER` | Usuário/email remetente *(opcional)* | `voce@gmail.com` |
+| `SMTP_PASSWORD` | Senha de app do Gmail *(opcional)* | `app_password_16_chars` |
+| `SMTP_FROM` | Remetente exibido *(opcional, default = `SMTP_USER`)* | `FieldFlow <voce@gmail.com>` |
 
 > ⚠️ Nunca versione o arquivo `.env`. Ele já está no `.gitignore`.
+>
+> 📧 As variáveis `SMTP_*` são **opcionais**. Sem elas, o serviço de email sobe em
+> modo *Noop* (apenas loga o que enviaria), então o projeto roda sem credenciais.
+> Para envio real via Gmail, gere uma **Senha de app** em
+> *Conta Google → Segurança → Verificação em duas etapas → Senhas de app* e use-a
+> em `SMTP_PASSWORD` (a senha normal da conta não funciona com SMTP).
 
 ---
 
@@ -361,7 +400,7 @@ FieldFLow/
 ├── AGENTS.md
 ├── README.md
 ├── infra/
-│   └── docker-compose.yml              # API + worker + Postgres + RabbitMQ
+│   └── docker-compose.yml              # API + worker + email_worker + Postgres + RabbitMQ
 ├── Documentos/
 │   ├── README.md
 │   ├── Sprint 1/
@@ -386,8 +425,10 @@ FieldFLow/
     │   ├── demandas/                   # Solicitações do cliente
     │   ├── candidaturas/               # Propostas + aceite
     │   ├── notificacoes/               # Auditoria dos eventos (evidência)
+    │   ├── emails/                     # Tabela emails_enviados (idempotência)
     │   ├── mom/                        # Interface + impl. RabbitMQ
-    │   ├── worker/                     # Consumer (python -m worker)
+    │   ├── notifier/                   # Interface EmailNotifier + impl. SMTP/Noop
+    │   ├── worker/                     # Consumers: python -m worker [email]
     │   ├── alembic/                    # Migrations
     │   └── tests/                      # pytest + FakeEventPublisher
     └── Mobile/                         # App Flutter (Sprints 3 e 4)

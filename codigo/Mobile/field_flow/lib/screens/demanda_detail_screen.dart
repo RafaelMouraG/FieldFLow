@@ -9,6 +9,7 @@ import '../state/auth_controller.dart';
 import '../viewmodels/demanda_detail_viewmodel.dart';
 import '../widgets/candidatura_card.dart';
 import '../widgets/map_preview.dart';
+import '../widgets/rating_stars.dart';
 import '../widgets/status_chip.dart';
 import 'prestador_profile_screen.dart';
 
@@ -78,6 +79,21 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
     ScaffoldMessenger.of(context).showSnackBar(
       erro == null
           ? const SnackBar(content: Text('Servico marcado como concluido!'))
+          : SnackBar(content: Text(erro), backgroundColor: Colors.red.shade700),
+    );
+  }
+
+  Future<void> _avaliar() async {
+    final r = await showDialog<({int nota, String comentario})>(
+      context: context,
+      builder: (_) => const _AvaliacaoDialog(),
+    );
+    if (r == null) return;
+    final erro = await _vm.avaliar(r.nota, r.comentario);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      erro == null
+          ? const SnackBar(content: Text('Avaliacao enviada. Obrigado!'))
           : SnackBar(content: Text(erro), backgroundColor: Colors.red.shade700),
     );
   }
@@ -209,7 +225,108 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
         ),
       );
     }
+    if (status == DemandaStatus.concluido) {
+      if (vm.jaAvaliada) {
+        final a = vm.avaliacao!;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Sua avaliacao:  ',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    RatingStars(nota: a.nota.toDouble()),
+                  ],
+                ),
+                if (a.comentario != null && a.comentario!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(a.comentario!),
+                ],
+              ],
+            ),
+          ),
+        );
+      }
+      if (vm.podeAvaliar) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: vm.avaliando ? null : _avaliar,
+              icon: const Icon(Icons.star_outline),
+              label: Text(vm.avaliando ? 'Enviando...' : 'Avaliar prestador'),
+            ),
+          ),
+        );
+      }
+    }
     return const SizedBox.shrink();
+  }
+}
+
+/// Dialog de avaliacao: estrelas (1..5) + comentario opcional.
+class _AvaliacaoDialog extends StatefulWidget {
+  const _AvaliacaoDialog();
+
+  @override
+  State<_AvaliacaoDialog> createState() => _AvaliacaoDialogState();
+}
+
+class _AvaliacaoDialogState extends State<_AvaliacaoDialog> {
+  int _nota = 5;
+  final _comentario = TextEditingController();
+
+  @override
+  void dispose() {
+    _comentario.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Avaliar prestador'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RatingInput(nota: _nota, onChanged: (n) => setState(() => _nota = n)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _comentario,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Comentario (opcional)',
+              alignLabelWithHint: true,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(
+            context,
+          ).pop((nota: _nota, comentario: _comentario.text.trim())),
+          child: const Text('Enviar'),
+        ),
+      ],
+    );
   }
 }
 

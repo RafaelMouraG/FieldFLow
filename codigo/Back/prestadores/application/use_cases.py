@@ -2,6 +2,9 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from avaliacoes.infrastructure.database import (
+    repository as avaliacoes_repository,
+)
 from mom.interface import EventPublisher
 from prestadores.domain.entities import StatusPerfil
 from prestadores.infrastructure.database import repository
@@ -39,7 +42,14 @@ def criar_perfil_pendente(db: Session, usuario_id: int) -> PerfilPrestador:
 
 
 def get_perfil(db: Session, usuario_id: int) -> PerfilPrestador | None:
-    return repository.get_by_usuario_id(db, usuario_id)
+    perfil = repository.get_by_usuario_id(db, usuario_id)
+    if perfil is not None:
+        # Anexa a reputacao (atributos transientes, nao persistidos) para o
+        # schema de resposta expor nota media + total de avaliacoes.
+        media, total = avaliacoes_repository.media_e_total(db, usuario_id)
+        perfil.nota_media = media
+        perfil.total_avaliacoes = total
+    return perfil
 
 
 def enviar_perfil(

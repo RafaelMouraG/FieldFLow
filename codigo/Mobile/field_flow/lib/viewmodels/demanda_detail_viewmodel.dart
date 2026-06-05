@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../core/api_exception.dart';
+import '../models/avaliacao.dart';
 import '../models/candidatura.dart';
 import '../models/demanda.dart';
 import '../models/enums.dart';
@@ -42,6 +43,13 @@ class DemandaDetailViewModel extends ChangeNotifier {
   bool _concluindo = false;
   bool get concluindo => _concluindo;
 
+  bool _avaliando = false;
+  bool get avaliando => _avaliando;
+
+  Avaliacao? _avaliacao;
+  Avaliacao? get avaliacao => _avaliacao;
+  bool get jaAvaliada => _avaliacao != null;
+
   int _ultimaContagem = 0;
   String? _mensagem;
 
@@ -50,6 +58,12 @@ class DemandaDetailViewModel extends ChangeNotifier {
 
   /// O cliente so marca como concluido quando o servico esta EM_EXECUCAO.
   bool get podeConcluir => _demanda?.status == DemandaStatus.emExecucao;
+
+  /// Pode avaliar apos CONCLUIDO, com prestador atribuido e sem avaliacao ainda.
+  bool get podeAvaliar =>
+      _demanda?.status == DemandaStatus.concluido &&
+      _demanda?.prestadorId != null &&
+      _avaliacao == null;
 
   /// Retorna (e limpa) uma mensagem transitoria para a View exibir uma vez.
   String? takeMensagem() {
@@ -77,6 +91,13 @@ class DemandaDetailViewModel extends ChangeNotifier {
       _demanda = demanda;
       _candidaturas = candidaturas;
       _ultimaContagem = candidaturas.length;
+
+      // Carrega a avaliacao uma vez, quando a demanda esta concluida.
+      if (demanda.status == DemandaStatus.concluido && _avaliacao == null) {
+        try {
+          _avaliacao = await _auth.avaliacoes.daDemanda(demandaId);
+        } catch (_) {}
+      }
       _erro = null;
     } on ApiException catch (e) {
       if (e.isUnauthorized) {
@@ -119,6 +140,25 @@ class DemandaDetailViewModel extends ChangeNotifier {
       return e.message;
     } finally {
       _concluindo = false;
+      notifyListeners();
+    }
+  }
+
+  /// Envia a avaliacao do prestador. Retorna `null` em sucesso ou a msg de erro.
+  Future<String?> avaliar(int nota, String? comentario) async {
+    _avaliando = true;
+    notifyListeners();
+    try {
+      _avaliacao = await _auth.avaliacoes.criar(
+        demandaId,
+        nota: nota,
+        comentario: comentario,
+      );
+      return null;
+    } on ApiException catch (e) {
+      return e.message;
+    } finally {
+      _avaliando = false;
       notifyListeners();
     }
   }

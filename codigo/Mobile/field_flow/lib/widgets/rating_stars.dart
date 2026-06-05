@@ -52,19 +52,26 @@ class RatingInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 1; i <= 5; i++)
-          IconButton(
-            onPressed: () => onChanged(i),
-            iconSize: size,
-            icon: Icon(
-              i <= nota ? Icons.star : Icons.star_border,
-              color: Colors.amber.shade700,
+    // FittedBox + botoes compactos evitam overflow em dialogs estreitos.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 1; i <= 5; i++)
+            IconButton(
+              onPressed: () => onChanged(i),
+              iconSize: size,
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              constraints: const BoxConstraints(),
+              visualDensity: VisualDensity.compact,
+              icon: Icon(
+                i <= nota ? Icons.star : Icons.star_border,
+                color: Colors.amber.shade700,
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

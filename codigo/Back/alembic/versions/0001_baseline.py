@@ -13,6 +13,7 @@ from typing import Sequence, Union
 from alembic import op
 
 # Side-effect imports: registram cada Table no Base.metadata
+import avaliacoes.infrastructure.database.models  # noqa: F401
 import candidaturas.infrastructure.database.models  # noqa: F401
 import demandas.infrastructure.database.models  # noqa: F401
 import notificacoes.infrastructure.database.models  # noqa: F401

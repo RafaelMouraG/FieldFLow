@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from auth.presentation.router import router as auth_router
+from avaliacoes.presentation.router import router as avaliacoes_router
 from candidaturas.presentation.router import router as candidaturas_router
 from core.migrations import upgrade_head
 from demandas.presentation.router import router as demandas_router
@@ -49,3 +50,4 @@ app.include_router(usuarios_router)
 app.include_router(prestadores_router)
 app.include_router(candidaturas_router)
 app.include_router(notificacoes_router)
+app.include_router(avaliacoes_router)

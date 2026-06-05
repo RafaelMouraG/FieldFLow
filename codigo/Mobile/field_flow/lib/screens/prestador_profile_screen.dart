@@ -172,6 +172,26 @@ class _PrestadorProfileView extends StatelessWidget {
         if (p.certificacoes.isNotEmpty) ...[
           _Secao('Certificacoes'),
           _Chips(p.certificacoes),
+          const SizedBox(height: 16),
+        ],
+        if (vm.avaliacoes.isNotEmpty) ...[
+          _Secao('Avaliacoes (${vm.avaliacoes.length})'),
+          ...vm.avaliacoes.map(
+            (a) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RatingStars(nota: a.nota.toDouble()),
+                  if (a.comentario != null && a.comentario!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(a.comentario!),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ],
       ],
     );

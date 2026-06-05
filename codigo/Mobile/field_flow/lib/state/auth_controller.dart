@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/api_client.dart';
 import '../models/usuario.dart';
 import '../services/auth_service.dart';
+import '../services/avaliacao_service.dart';
 import '../services/candidatura_service.dart';
 import '../services/demanda_service.dart';
 import '../services/notificacao_service.dart';
@@ -39,6 +40,7 @@ class AuthController extends ChangeNotifier {
   UsuarioService get usuarios => UsuarioService(_client);
   PrestadorService get prestadores => PrestadorService(_client);
   NotificacaoService get notificacoes => NotificacaoService(_client);
+  AvaliacaoService get avaliacoes => AvaliacaoService(_client);
 
   /// Restaura o token salvo e revalida com GET /auth/me. Se o token expirou,
   /// limpa a sessao silenciosamente.

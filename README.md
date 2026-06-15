@@ -26,7 +26,7 @@
 |--------|------|--------|-------|
 | Sprint 1 | Backend REST + Arquitetura | ✅ Concluída | 11/05/2026 |
 | Sprint 2 | Integração MOM (RabbitMQ) | ✅ Concluída | 25/05/2026 |
-| Sprint 3 | App Flutter — Cliente | ⏳ Pendente | 15/06/2026 |
+| Sprint 3 | App Flutter — Cliente | ✅ Concluída | 15/06/2026 |
 | Sprint 4 | App Flutter — Prestador + Entrega Final | ⏳ Pendente | 03/07/2026 |
 
 ---
@@ -71,7 +71,9 @@ O **FieldFlow** resolve esse gargalo centralizando a demanda e otimizando a log�
 - 📧 **Notificações por Email (Pub-Sub):** Um segundo consumidor independente reage aos mesmos eventos e notifica o usuário por email (SMTP)
 - 🔄 **Fluxo de Status Orientado a Eventos:** Ciclo `PENDENTE → ACEITO → EM_EXECUCAO → CONCLUIDO`
 - 🛡️ **Idempotência + DLQ:** `event_id` único por mensagem; falhas vão para Dead-Letter Queue
-- 📱 **App Móvel para o Cliente:** Interface Flutter *(Sprint 3 — pendente)*
+- 🗺️ **Geolocalização:** Demanda guarda coordenadas de origem/destino e cliente CNPJ define o endereço da fazenda; o app exibe em mapa (OpenStreetMap) e abre no app de mapas nativo
+- ⭐ **Avaliação e Reputação:** Após o serviço concluído, o cliente avalia o prestador (nota 1–5 + comentário); a reputação fica visível antes de aceitar uma candidatura
+- 📱 **App Móvel para o Cliente:** Interface Flutter completa *(Sprint 3 — concluída)*
 - 📱 **App Móvel para o Prestador:** Interface Flutter *(Sprint 4 — pendente)*
 
 ---
@@ -95,6 +97,13 @@ O **FieldFlow** resolve esse gargalo centralizando a demanda e otimizando a log�
 |---|---|---|
 | Flutter | 3.x | Framework mobile (Sprints 3 e 4) |
 | Dart | 3.x | Linguagem |
+| provider | 6.x | Gerência de estado (MVVM via `ChangeNotifier`) |
+| http | 1.x | Cliente REST para consumir a API |
+| shared_preferences | 2.x | Persistência do token JWT e da URL do servidor |
+| flutter_map + latlong2 | 7.x / 0.9 | Mapa OpenStreetMap (sem API key) para o local da tarefa |
+| geolocator | 13.x | GPS ("usar minha localização") no seletor de local |
+| url_launcher | 6.x | Abrir o app de mapas nativo ("Abrir no Maps") |
+| intl | 0.20 | Formatação de datas/moeda (pt-BR) |
 
 ### 📨 Mensageria
 
@@ -191,8 +200,9 @@ Cada módulo de domínio segue o mesmo molde de 4 camadas:
 | `auth/` | Registro, login JWT, recuperação do `current_user` |
 | `usuarios/` | CRUD básico de usuários (CLIENTE / PRESTADOR) |
 | `prestadores/` | Perfil profissional + status (INCOMPLETO → EM_ANALISE → APROVADO/REPROVADO) |
-| `demandas/` | Solicitações do cliente e transições de status |
+| `demandas/` | Solicitações do cliente, coordenadas de origem/destino e transições de status |
 | `candidaturas/` | Propostas de prestadores para demandas + aceite |
+| `avaliacoes/` | Avaliação do prestador (nota + comentário) após o serviço concluído + reputação |
 | `notificacoes/` | Tabela de auditoria dos eventos consumidos (evidência da Sprint 2) |
 | `emails/` | Tabela `emails_enviados` (auditoria + idempotência do worker de email) |
 | `mom/` | Interface `EventPublisher` (DIP) + impl. RabbitMQ + Noop |
@@ -200,6 +210,30 @@ Cada módulo de domínio segue o mesmo molde de 4 camadas:
 | `worker/` | Dois consumidores: negócio (`fieldflow.notificacoes`) e email (`fieldflow.emails`) |
 | `core/` | Configurações (pydantic-settings) e sessão SQLAlchemy |
 | `alembic/` | Versionamento do schema |
+
+### Organização do App Cliente (Clean Architecture + MVVM)
+
+O app Flutter do cliente (`codigo/Mobile/field_flow/`) espelha as mesmas camadas
+no front-end, com **MVVM** na apresentação e **polling** (`Timer.periodic`) para
+manter o estado sincronizado com o backend sem WebSocket.
+
+```
+lib/
+├── domain/          # Entidades, enums, contratos de repositório e use cases (puro Dart)
+├── data/            # Models (JSON), datasources REST e implementações de repositório
+├── presentation/    # screens + viewmodels (ChangeNotifier) + widgets reutilizáveis
+├── state/           # AuthController (sessão JWT global via Provider)
+└── core/            # api_client, config (base URL), theme, formatters
+```
+
+- **10 telas:** login, cadastro, home, listagem, detalhe e criação de demanda,
+  meu perfil, perfil do prestador (reputação), notificações e seletor de mapa.
+- **Atualização assíncrona:** polling nos ViewModels (home/lista ~8 s, detalhe ~6 s,
+  notificações ~10 s) — ex.: "Nova proposta recebida!" aparece sozinha no detalhe.
+- **Mapa:** `flutter_map` (OpenStreetMap, sem API key) + `geolocator` (GPS) para
+  marcar o local da tarefa; `url_launcher` abre o app de mapas nativo.
+
+Detalhes e decisões: [`Documentos/Sprint 3/arquitetura.md`](Documentos/Sprint%203/arquitetura.md).
 
 ---
 
@@ -297,6 +331,30 @@ uvicorn main:app --reload
 
 ---
 
+### 📱 App Mobile (Flutter — Cliente)
+
+Com o backend no ar, rode o app do cliente:
+
+```bash
+cd codigo/Mobile/field_flow
+flutter pub get
+flutter run            # escolha o dispositivo (simulador iOS recomendado no Mac)
+```
+
+A **base URL** da API é resolvida nesta ordem: campo "Servidor" na tela de login →
+`--dart-define=API_BASE_URL=...` no build → padrão por plataforma (Android emulador
+`http://10.0.2.2:8000`, demais `http://localhost:8000`). Para celular físico, aponte
+para o IP da máquina na LAN.
+
+> 📧 Antes da demo, **pare o worker de email** para não disparar emails reais ao
+> criar/aceitar candidaturas: `docker compose -f infra/docker-compose.yml stop email_worker`.
+
+Dados de demonstração (contas de teste, demandas, candidaturas e avaliações) são
+criados via o script `scripts/seed_demo.py`. Guia completo do app, contas de teste
+e roteiro de validação: [`Documentos/Sprint 3/README.md`](Documentos/Sprint%203/README.md).
+
+---
+
 ## 📚 Documentação da API
 
 Com a API rodando, a documentação interativa gerada automaticamente pelo FastAPI está disponível em:
@@ -352,6 +410,14 @@ Com a API rodando, a documentação interativa gerada automaticamente pelo FastA
 | `DELETE` | `/candidaturas/{id}` | Prestador cancela a própria candidatura |
 | `GET` | `/prestadores/me/candidaturas` | Histórico de candidaturas do prestador autenticado |
 
+### Avaliações
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/demandas/{demanda_id}/avaliacao` | Cliente avalia o prestador após CONCLUIDO (nota 1–5 + comentário → publica `avaliacao.criada`) |
+| `GET` | `/demandas/{demanda_id}/avaliacao` | Consulta a avaliação de uma demanda |
+| `GET` | `/prestadores/{prestador_id}/avaliacoes` | Lista de avaliações (reputação) de um prestador |
+
 ### Notificações (evidência da Sprint 2)
 
 | Método | Rota | Descrição |
@@ -383,11 +449,19 @@ pytest
 
 Cobertura atual: use cases de `demandas` e `candidaturas`.
 
+### App Mobile
+
+```bash
+cd codigo/Mobile/field_flow
+flutter analyze   # análise estática (sem issues)
+flutter test      # smoke test (abre no login sem sessão)
+```
+
 ### Evidências Sprint 2
 
 Logs do worker, dumps `GET /notificacoes`, screenshots do RabbitMQ Management e descrição do cenário executado:
 
-📁 [`Documentos/evidencias/`](Documentos/evidencias/)
+📁 [`Documentos/Sprint 2/evidencias/`](Documentos/Sprint%202/evidencias/)
 
 ---
 
@@ -401,6 +475,9 @@ FieldFLow/
 ├── README.md
 ├── infra/
 │   └── docker-compose.yml              # API + worker + email_worker + Postgres + RabbitMQ
+├── scripts/
+│   ├── seed_demo.py                    # Popula dados de demonstração via API
+│   └── stress_publish.py               # Acúmulo de mensagens no RabbitMQ (evidência)
 ├── Documentos/
 │   ├── README.md
 │   ├── Sprint 1/
@@ -409,8 +486,11 @@ FieldFLow/
 │   ├── Sprint 2/
 │   │   ├── Relatório de Integração.pdf
 │   │   ├── relatorio-mom.md
-│   │   └── eventos-mom.md              # Catálogo de eventos + payloads
-│   ├── evidencias/                     # Screenshots, worker.log, notificacoes.txt
+│   │   ├── eventos-mom.md              # Catálogo de eventos + payloads
+│   │   └── evidencias/                 # Screenshots, worker.log, notificacoes.txt
+│   ├── Sprint 3/
+│   │   ├── README.md                   # Guia do app, contas de teste e roteiro de demo
+│   │   └── arquitetura.md              # Camadas do app + decisões (Clean Arch + MVVM)
 │   └── postman/
 │       └── fieldflow_postman_collection.json
 └── codigo/
@@ -420,10 +500,11 @@ FieldFLow/
     │   ├── main.py                     # Entry point da API
     │   ├── core/                       # config + database (SQLAlchemy)
     │   ├── auth/                       # Registro/login JWT
-    │   ├── usuarios/                   # CRUD de usuários
+    │   ├── usuarios/                   # CRUD de usuários + endereço da fazenda
     │   ├── prestadores/                # Perfis profissionais
-    │   ├── demandas/                   # Solicitações do cliente
+    │   ├── demandas/                   # Solicitações do cliente + geolocalização
     │   ├── candidaturas/               # Propostas + aceite
+    │   ├── avaliacoes/                 # Avaliação do prestador + reputação
     │   ├── notificacoes/               # Auditoria dos eventos (evidência)
     │   ├── emails/                     # Tabela emails_enviados (idempotência)
     │   ├── mom/                        # Interface + impl. RabbitMQ
@@ -431,7 +512,15 @@ FieldFLow/
     │   ├── worker/                     # Consumers: python -m worker [email]
     │   ├── alembic/                    # Migrations
     │   └── tests/                      # pytest + FakeEventPublisher
-    └── Mobile/                         # App Flutter (Sprints 3 e 4)
+    └── Mobile/
+        └── field_flow/                 # App Flutter — Cliente (Sprint 3)
+            ├── pubspec.yaml
+            └── lib/
+                ├── domain/             # Entidades, enums, contratos + use cases
+                ├── data/               # Models, datasources REST, repositories
+                ├── presentation/       # screens + viewmodels (MVVM) + widgets
+                ├── state/              # AuthController (sessão JWT via Provider)
+                └── core/               # api_client, config, theme, formatters
 ```
 
 ---

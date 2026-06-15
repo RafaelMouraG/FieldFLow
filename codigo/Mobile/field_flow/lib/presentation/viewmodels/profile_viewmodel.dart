@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/usuario.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/usuario.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel da tela "Meu perfil": edicao de dados e troca de senha.
 class ProfileViewModel extends ChangeNotifier {

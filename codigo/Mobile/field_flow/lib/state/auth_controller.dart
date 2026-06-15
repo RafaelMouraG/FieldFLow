@@ -2,21 +2,43 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/api_client.dart';
-import '../models/usuario.dart';
-import '../services/auth_service.dart';
-import '../services/avaliacao_service.dart';
-import '../services/candidatura_service.dart';
-import '../services/demanda_service.dart';
-import '../services/notificacao_service.dart';
-import '../services/prestador_service.dart';
-import '../services/usuario_service.dart';
+import '../data/datasources/auth_remote_datasource.dart';
+import '../data/datasources/avaliacao_remote_datasource.dart';
+import '../data/datasources/candidatura_remote_datasource.dart';
+import '../data/datasources/demanda_remote_datasource.dart';
+import '../data/datasources/notificacao_remote_datasource.dart';
+import '../data/datasources/prestador_remote_datasource.dart';
+import '../data/datasources/usuario_remote_datasource.dart';
+import '../data/repositories/auth_repository_impl.dart';
+import '../data/repositories/avaliacao_repository_impl.dart';
+import '../data/repositories/candidatura_repository_impl.dart';
+import '../data/repositories/demanda_repository_impl.dart';
+import '../data/repositories/notificacao_repository_impl.dart';
+import '../data/repositories/prestador_repository_impl.dart';
+import '../data/repositories/usuario_repository_impl.dart';
+import '../domain/entities/usuario.dart';
+import '../domain/repositories/auth_repository.dart';
+import '../domain/repositories/avaliacao_repository.dart';
+import '../domain/repositories/candidatura_repository.dart';
+import '../domain/repositories/demanda_repository.dart';
+import '../domain/repositories/notificacao_repository.dart';
+import '../domain/repositories/prestador_repository.dart';
+import '../domain/repositories/usuario_repository.dart';
+import '../domain/usecases/auth_usecases.dart';
+import '../domain/usecases/avaliacao_usecases.dart';
+import '../domain/usecases/candidatura_usecases.dart';
+import '../domain/usecases/demanda_usecases.dart';
+import '../domain/usecases/notificacao_usecases.dart';
+import '../domain/usecases/prestador_usecases.dart';
+import '../domain/usecases/usuario_usecases.dart';
 
-/// Sessao do app: guarda o token JWT e o usuario logado, expoe as services
-/// ja configuradas com o token atual e notifica a UI quando o login muda.
+/// Sessao do app + ponto de composicao (composition root) da Clean Architecture.
 ///
-/// E o unico ponto de verdade sobre "estou autenticado?". A raiz do app
-/// (Provider) escuta este controller para decidir entre tela de login e o
-/// fluxo autenticado.
+/// Guarda o token JWT e o usuario logado, monta a cadeia
+/// datasource -> repositorio (impl) -> use case com o token vigente e expoe os
+/// use cases para a camada de apresentacao (ViewModels). E o unico ponto de
+/// verdade sobre "estou autenticado?": a raiz do app observa este controller
+/// para decidir entre a tela de login e o fluxo autenticado.
 class AuthController extends ChangeNotifier {
   static const _tokenKey = 'jwt_token';
 
@@ -31,26 +53,62 @@ class AuthController extends ChangeNotifier {
   /// `true` durante a restauracao da sessao no boot (mostra splash).
   bool get carregando => _carregando;
 
+  // --- Composicao: ApiClient -> datasources -> repositorios (com o token atual).
   ApiClient get _client => ApiClient(token: _token);
-  AuthService get _auth => AuthService(_client);
 
-  // Services prontas para as telas, sempre com o token vigente.
-  DemandaService get demandas => DemandaService(_client);
-  CandidaturaService get candidaturas => CandidaturaService(_client);
-  UsuarioService get usuarios => UsuarioService(_client);
-  PrestadorService get prestadores => PrestadorService(_client);
-  NotificacaoService get notificacoes => NotificacaoService(_client);
-  AvaliacaoService get avaliacoes => AvaliacaoService(_client);
+  AuthRepository get _authRepo =>
+      AuthRepositoryImpl(AuthRemoteDataSource(_client));
+  DemandaRepository get _demandaRepo =>
+      DemandaRepositoryImpl(DemandaRemoteDataSource(_client));
+  CandidaturaRepository get _candidaturaRepo =>
+      CandidaturaRepositoryImpl(CandidaturaRemoteDataSource(_client));
+  AvaliacaoRepository get _avaliacaoRepo =>
+      AvaliacaoRepositoryImpl(AvaliacaoRemoteDataSource(_client));
+  UsuarioRepository get _usuarioRepo =>
+      UsuarioRepositoryImpl(UsuarioRemoteDataSource(_client));
+  PrestadorRepository get _prestadorRepo =>
+      PrestadorRepositoryImpl(PrestadorRemoteDataSource(_client));
+  NotificacaoRepository get _notificacaoRepo =>
+      NotificacaoRepositoryImpl(NotificacaoRemoteDataSource(_client));
 
-  /// Restaura o token salvo e revalida com GET /auth/me. Se o token expirou,
-  /// limpa a sessao silenciosamente.
+  // --- Use cases expostos para os ViewModels (camada de apresentacao).
+  ListarMinhasDemandas get listarDemandas =>
+      ListarMinhasDemandas(_demandaRepo);
+  ObterDemanda get obterDemanda => ObterDemanda(_demandaRepo);
+  CriarDemanda get criarDemanda => CriarDemanda(_demandaRepo);
+  AtualizarStatusDemanda get atualizarStatusDemanda =>
+      AtualizarStatusDemanda(_demandaRepo);
+  RemoverDemanda get removerDemanda => RemoverDemanda(_demandaRepo);
+
+  ListarCandidaturas get listarCandidaturas =>
+      ListarCandidaturas(_candidaturaRepo);
+  AceitarCandidatura get aceitarCandidatura =>
+      AceitarCandidatura(_candidaturaRepo);
+
+  CriarAvaliacao get criarAvaliacao => CriarAvaliacao(_avaliacaoRepo);
+  ObterAvaliacaoDaDemanda get obterAvaliacaoDaDemanda =>
+      ObterAvaliacaoDaDemanda(_avaliacaoRepo);
+  ListarAvaliacoesDoPrestador get listarAvaliacoesDoPrestador =>
+      ListarAvaliacoesDoPrestador(_avaliacaoRepo);
+
+  ObterUsuarioPublico get obterUsuarioPublico =>
+      ObterUsuarioPublico(_usuarioRepo);
+  ObterPerfilPrestador get obterPerfilPrestador =>
+      ObterPerfilPrestador(_prestadorRepo);
+  ListarNotificacoes get listarNotificacoes =>
+      ListarNotificacoes(_notificacaoRepo);
+
+  // --- Acoes de sessao (mutam token/usuario), implementadas via use cases.
+
+  /// Restaura o token salvo e revalida com o use case ObterUsuarioLogado.
+  /// Se o token expirou, limpa a sessao silenciosamente.
   Future<void> restaurarSessao() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_tokenKey);
     if (saved != null && saved.isNotEmpty) {
       _token = saved;
       try {
-        _usuario = await _auth.me();
+        _usuario = await ObterUsuarioLogado(_authRepo)();
       } catch (_) {
         await _limpar();
       }
@@ -60,9 +118,9 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> login(String email, String senha) async {
-    final token = await _auth.login(email, senha);
+    final token = await Login(_authRepo)(email, senha);
     await _persistir(token);
-    _usuario = await _auth.me();
+    _usuario = await ObterUsuarioLogado(_authRepo)();
     notifyListeners();
   }
 
@@ -74,7 +132,7 @@ class AuthController extends ChangeNotifier {
     required String documento,
     String? telefone,
   }) async {
-    final res = await _auth.registerCliente(
+    final res = await RegistrarCliente(_authRepo)(
       nome: nome,
       email: email,
       senha: senha,
@@ -98,7 +156,7 @@ class AuthController extends ChangeNotifier {
     double? enderecoLng,
   }) async {
     final id = _usuario!.id;
-    _usuario = await usuarios.atualizar(
+    _usuario = await AtualizarUsuario(_usuarioRepo)(
       id,
       nome: nome,
       email: email,
@@ -112,7 +170,7 @@ class AuthController extends ChangeNotifier {
 
   /// Troca a senha (exige a atual). Nao mexe na sessao/token.
   Future<void> trocarSenha(String senhaAtual, String senhaNova) =>
-      _auth.trocarSenha(senhaAtual, senhaNova);
+      TrocarSenha(_authRepo)(senhaAtual, senhaNova);
 
   Future<void> logout() async {
     await _limpar();

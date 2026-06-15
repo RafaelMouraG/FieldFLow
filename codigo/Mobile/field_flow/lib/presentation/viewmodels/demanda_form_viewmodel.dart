@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/enums.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/enums.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel do formulario de criacao de demanda.
 ///
@@ -83,7 +83,7 @@ class DemandaFormViewModel extends ChangeNotifier {
   }) async {
     _setEnviando(true);
     try {
-      await _auth.demandas.criar(
+      await _auth.criarDemanda(
         titulo: titulo.trim(),
         descricao: descricao.trim(),
         origem: origem.trim(),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/auth_controller.dart';
+import '../../state/auth_controller.dart';
 import '../viewmodels/demanda_list_viewmodel.dart';
 import '../widgets/demanda_card.dart';
 import 'demanda_detail_screen.dart';

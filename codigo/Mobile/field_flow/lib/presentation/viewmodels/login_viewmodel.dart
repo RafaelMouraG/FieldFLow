@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel da tela de login. Concentra o estado de envio e a regra de
 /// autenticacao; a View apenas observa `enviando` e reage ao retorno de

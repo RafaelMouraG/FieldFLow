@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/enums.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/enums.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel do cadastro de cliente. Guarda o tipo de documento selecionado e
 /// o estado de envio; a regra de cadastro (POST /auth/register) fica aqui.

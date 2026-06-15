@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/avaliacao.dart';
-import '../models/perfil_prestador.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/avaliacao.dart';
+import '../../domain/entities/perfil_prestador.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel da tela de perfil de um prestador (visao do cliente antes de
 /// aceitar uma proposta). Busca o perfil profissional + o nome publico.
@@ -36,12 +36,12 @@ class PrestadorProfileViewModel extends ChangeNotifier {
     try {
       // Nome e secundario; se falhar, mostramos "Prestador #id".
       try {
-        _nome = (await _auth.usuarios.obterPublico(prestadorId)).nome;
+        _nome = (await _auth.obterUsuarioPublico(prestadorId)).nome;
       } catch (_) {}
-      _perfil = await _auth.prestadores.perfil(prestadorId);
+      _perfil = await _auth.obterPerfilPrestador(prestadorId);
       // Comentarios sao secundarios; se falhar, mantem o perfil visivel.
       try {
-        _avaliacoes = await _auth.avaliacoes.doPrestador(prestadorId);
+        _avaliacoes = await _auth.listarAvaliacoesDoPrestador(prestadorId);
       } catch (_) {}
       _erro = null;
     } on ApiException catch (e) {

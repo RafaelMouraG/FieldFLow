@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/enums.dart';
+import '../../domain/entities/enums.dart';
 
 /// Chip colorido para o status de uma demanda.
 class DemandaStatusChip extends StatelessWidget {

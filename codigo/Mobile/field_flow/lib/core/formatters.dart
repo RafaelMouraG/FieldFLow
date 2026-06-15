@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../models/enums.dart';
+import '../domain/entities/enums.dart';
 
 /// Helpers de formatacao pt-BR (moeda, area, datas).
 class Fmt {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/auth_controller.dart';
+import '../../state/auth_controller.dart';
 import '../viewmodels/prestador_profile_viewmodel.dart';
 import '../widgets/rating_stars.dart';
 

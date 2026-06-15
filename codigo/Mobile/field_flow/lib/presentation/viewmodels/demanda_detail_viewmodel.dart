@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/avaliacao.dart';
-import '../models/candidatura.dart';
-import '../models/demanda.dart';
-import '../models/enums.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/avaliacao.dart';
+import '../../domain/entities/candidatura.dart';
+import '../../domain/entities/demanda.dart';
+import '../../domain/entities/enums.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel do detalhe da demanda + candidaturas.
 ///
@@ -78,8 +78,8 @@ class DemandaDetailViewModel extends ChangeNotifier {
       notifyListeners();
     }
     try {
-      final demanda = await _auth.demandas.obter(demandaId);
-      final candidaturas = await _auth.candidaturas.listarDaDemanda(demandaId);
+      final demanda = await _auth.obterDemanda(demandaId);
+      final candidaturas = await _auth.listarCandidaturas(demandaId);
 
       final novas = candidaturas.length - _ultimaContagem;
       if (silencioso && _ultimaContagem > 0 && novas > 0) {
@@ -95,7 +95,7 @@ class DemandaDetailViewModel extends ChangeNotifier {
       // Carrega a avaliacao uma vez, quando a demanda esta concluida.
       if (demanda.status == DemandaStatus.concluido && _avaliacao == null) {
         try {
-          _avaliacao = await _auth.avaliacoes.daDemanda(demandaId);
+          _avaliacao = await _auth.obterAvaliacaoDaDemanda(demandaId);
         } catch (_) {}
       }
       _erro = null;
@@ -116,7 +116,7 @@ class DemandaDetailViewModel extends ChangeNotifier {
     _aceitandoId = c.id;
     notifyListeners();
     try {
-      await _auth.candidaturas.aceitar(c.id);
+      await _auth.aceitarCandidatura(c.id);
       await carregar();
       return null;
     } on ApiException catch (e) {
@@ -133,7 +133,7 @@ class DemandaDetailViewModel extends ChangeNotifier {
     _concluindo = true;
     notifyListeners();
     try {
-      await _auth.demandas.atualizarStatus(demandaId, DemandaStatus.concluido);
+      await _auth.atualizarStatusDemanda(demandaId, DemandaStatus.concluido);
       await carregar();
       return null;
     } on ApiException catch (e) {
@@ -149,7 +149,7 @@ class DemandaDetailViewModel extends ChangeNotifier {
     _avaliando = true;
     notifyListeners();
     try {
-      _avaliacao = await _auth.avaliacoes.criar(
+      _avaliacao = await _auth.criarAvaliacao(
         demandaId,
         nota: nota,
         comentario: comentario,

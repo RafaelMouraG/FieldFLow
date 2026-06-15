@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/notificacao.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/notificacao.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel do feed de notificacoes. Recarrega por polling ([_intervalo])
 /// para refletir novos eventos sem acao do usuario.
@@ -33,7 +33,7 @@ class NotificacoesViewModel extends ChangeNotifier {
       notifyListeners();
     }
     try {
-      _itens = await _auth.notificacoes.listar();
+      _itens = await _auth.listarNotificacoes();
       _erro = null;
     } on ApiException catch (e) {
       if (e.isUnauthorized) {

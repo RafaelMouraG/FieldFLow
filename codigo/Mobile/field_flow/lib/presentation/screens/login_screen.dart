@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/config.dart';
-import '../state/auth_controller.dart';
+import '../../core/config.dart';
+import '../../state/auth_controller.dart';
 import '../viewmodels/login_viewmodel.dart';
 import 'register_screen.dart';
 

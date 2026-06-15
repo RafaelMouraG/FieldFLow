@@ -3,7 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../models/local_selecionado.dart';
+import '../../domain/entities/local_selecionado.dart';
 
 /// Seletor de local no mapa (OpenStreetMap, sem API key).
 ///

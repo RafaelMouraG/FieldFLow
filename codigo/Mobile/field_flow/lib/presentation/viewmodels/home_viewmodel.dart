@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/demanda.dart';
-import '../models/enums.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/demanda.dart';
+import '../../domain/entities/enums.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel da Home/dashboard do cliente.
 ///
@@ -51,10 +51,10 @@ class HomeViewModel extends ChangeNotifier {
       notifyListeners();
     }
     try {
-      _demandas = await _auth.demandas.listMinhas();
+      _demandas = await _auth.listarDemandas();
       // O feed de notificacoes e secundario: se falhar, nao derruba a Home.
       try {
-        _notificacoes = (await _auth.notificacoes.listar()).length;
+        _notificacoes = (await _auth.listarNotificacoes()).length;
       } catch (_) {}
       _erro = null;
     } on ApiException catch (e) {

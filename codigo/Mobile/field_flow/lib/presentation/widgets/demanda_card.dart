@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../core/formatters.dart';
-import '../models/demanda.dart';
+import '../../core/formatters.dart';
+import '../../domain/entities/demanda.dart';
 import 'status_chip.dart';
 
 /// Cartao de uma demanda na listagem.

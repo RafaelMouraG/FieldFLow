@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/formatters.dart';
-import '../models/notificacao.dart';
-import '../state/auth_controller.dart';
+import '../../core/formatters.dart';
+import '../../domain/entities/notificacao.dart';
+import '../../state/auth_controller.dart';
 import '../viewmodels/notificacoes_viewmodel.dart';
 
 /// TELA — Feed de notificacoes (eventos do usuario). Atualiza por polling.

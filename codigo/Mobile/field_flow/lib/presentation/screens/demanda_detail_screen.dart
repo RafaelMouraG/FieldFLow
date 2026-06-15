@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/formatters.dart';
-import '../models/candidatura.dart';
-import '../models/demanda.dart';
-import '../models/enums.dart';
-import '../state/auth_controller.dart';
+import '../../core/formatters.dart';
+import '../../domain/entities/candidatura.dart';
+import '../../domain/entities/demanda.dart';
+import '../../domain/entities/enums.dart';
+import '../../state/auth_controller.dart';
 import '../viewmodels/demanda_detail_viewmodel.dart';
 import '../widgets/candidatura_card.dart';
 import '../widgets/map_preview.dart';

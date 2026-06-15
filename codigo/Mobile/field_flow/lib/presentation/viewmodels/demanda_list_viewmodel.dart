@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../core/api_exception.dart';
-import '../models/demanda.dart';
-import '../state/auth_controller.dart';
+import '../../core/api_exception.dart';
+import '../../domain/entities/demanda.dart';
+import '../../state/auth_controller.dart';
 
 /// ViewModel da listagem de demandas do cliente.
 ///
@@ -38,7 +38,7 @@ class DemandaListViewModel extends ChangeNotifier {
       notifyListeners();
     }
     try {
-      _demandas = await _auth.demandas.listMinhas();
+      _demandas = await _auth.listarDemandas();
       _erro = null;
     } on ApiException catch (e) {
       if (e.isUnauthorized) {

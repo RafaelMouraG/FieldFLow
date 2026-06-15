@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'core/config.dart';
 import 'core/theme.dart';
-import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
+import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/login_screen.dart';
 import 'state/auth_controller.dart';
 
 Future<void> main() async {

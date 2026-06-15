@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../core/formatters.dart';
-import '../models/enums.dart';
-import '../models/local_selecionado.dart';
-import '../state/auth_controller.dart';
+import '../../core/formatters.dart';
+import '../../domain/entities/enums.dart';
+import '../../domain/entities/local_selecionado.dart';
+import '../../state/auth_controller.dart';
 import '../viewmodels/demanda_form_viewmodel.dart';
 import 'location_picker_screen.dart';
 

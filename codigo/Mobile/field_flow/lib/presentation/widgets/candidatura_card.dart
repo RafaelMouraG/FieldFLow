@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../core/formatters.dart';
-import '../models/candidatura.dart';
-import '../models/enums.dart';
+import '../../core/formatters.dart';
+import '../../domain/entities/candidatura.dart';
+import '../../domain/entities/enums.dart';
 import 'status_chip.dart';
 
 /// Cartao de uma candidatura na tela de detalhe da demanda.

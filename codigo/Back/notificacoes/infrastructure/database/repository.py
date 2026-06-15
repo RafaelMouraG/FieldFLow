@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 
 from notificacoes.infrastructure.database.models import Notificacao
 
+# Teto de varredura do log global antes de filtrar por usuario em memoria.
+_SCAN_LIMIT = 1000
+
 
 def save(db: Session, notificacao: Notificacao) -> Notificacao:
     # Sem commit: o consumer (worker._process) e quem fecha a transacao
@@ -25,3 +28,41 @@ def get_all(db: Session, limit: int = 100) -> list[Notificacao]:
         .limit(limit)
         .all()
     )
+
+
+def get_para_usuario(
+    db: Session,
+    usuario_id: int,
+    demanda_ids: list[int],
+    limit: int = 100,
+) -> list[Notificacao]:
+    """Filtra o log global pelos eventos que pertencem a um usuario.
+
+    A tabela e pequena (auditoria); varremos os mais recentes e filtramos em
+    memoria sobre o payload JSON — assim ficamos independentes de operadores
+    JSON especificos do banco. Um evento entra se: cita o usuario como
+    cliente/prestador, refere uma das demandas dele, ou e um evento de conta
+    sobre ele proprio.
+    """
+    dset = set(demanda_ids)
+    recentes = (
+        db.query(Notificacao)
+        .order_by(Notificacao.id.desc())
+        .limit(_SCAN_LIMIT)
+        .all()
+    )
+
+    resultado: list[Notificacao] = []
+    for n in recentes:
+        p = n.payload or {}
+        pertence = (
+            p.get("cliente_id") == usuario_id
+            or p.get("prestador_id") == usuario_id
+            or p.get("demanda_id") in dset
+            or (n.event_type == "usuario" and p.get("id") == usuario_id)
+        )
+        if pertence:
+            resultado.append(n)
+            if len(resultado) >= limit:
+                break
+    return resultado

@@ -35,6 +35,23 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # HTTP client para consumir a API REST do backend (camada services).
+  http: ^1.2.2
+  # Gerencia de estado (AuthController via ChangeNotifier/Provider).
+  provider: ^6.1.2
+  # Persiste o token JWT e a URL do servidor entre execucoes.
+  shared_preferences: ^2.3.2
+  # Formatacao de datas/moeda (pt_BR).
+  intl: ^0.20.2
+  # Mapa (OpenStreetMap, sem API key) para escolher/exibir o local da tarefa.
+  flutter_map: ^7.0.2
+  # Tipo LatLng usado pelo flutter_map.
+  latlong2: ^0.9.1
+  # GPS ("usar minha localizacao") no seletor de local.
+  geolocator: ^13.0.2
+  # Abrir o app de mapas nativo para navegacao ("Abrir no Maps").
+  url_launcher: ^6.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

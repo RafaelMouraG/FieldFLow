@@ -16,6 +16,10 @@ class UsuarioBase(BaseModel):
     tipo_documento: TipoDocumento
     documento: str = Field(min_length=11, max_length=18)
     tipo: TipoUsuario
+    # Endereco da fazenda/empresa (uso pratico apenas para clientes CNPJ).
+    endereco: Optional[str] = None
+    endereco_lat: Optional[float] = None
+    endereco_lng: Optional[float] = None
 
 
 class UsuarioCreate(UsuarioBase):
@@ -37,6 +41,9 @@ class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
     email: Optional[EmailStr] = None
     telefone: Optional[str] = None
+    endereco: Optional[str] = None
+    endereco_lat: Optional[float] = None
+    endereco_lng: Optional[float] = None
     # Campos sensiveis (senha, tipo, ativo) NAO entram aqui:
     # - senha: fluxo proprio em PUT /auth/me/senha (exige senha atual)
     # - tipo: definido no cadastro; trocar quebra invariantes (ex.: perfil prestador)

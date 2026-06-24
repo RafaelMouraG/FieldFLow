@@ -9,6 +9,7 @@ class Notificacao {
     required this.routingKey,
     required this.payload,
     required this.criadoEm,
+    this.lida = false,
   });
 
   final int id;
@@ -16,6 +17,9 @@ class Notificacao {
   final String routingKey;
   final Map<String, dynamic> payload;
   final DateTime criadoEm;
+
+  /// Se o usuario ja visualizou esta notificacao (marca d'agua no backend).
+  final bool lida;
 
   /// Titulo curto conforme a routing key do evento.
   String get titulo => switch (routingKey) {

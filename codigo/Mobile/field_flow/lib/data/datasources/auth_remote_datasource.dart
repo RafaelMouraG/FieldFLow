@@ -52,9 +52,9 @@ class AuthRemoteDataSource {
     return UsuarioModel.fromJson(res as Map<String, dynamic>);
   }
 
-  /// PUT /auth/me/senha — exige a senha atual; resposta 204 sem corpo.
-  Future<void> trocarSenha(String senhaAtual, String senhaNova) => _client.put(
+  /// PUT /auth/me/senha — informa apenas a nova senha; resposta 204 sem corpo.
+  Future<void> trocarSenha(String senhaNova) => _client.put(
     '/auth/me/senha',
-    body: {'senha_atual': senhaAtual, 'senha_nova': senhaNova},
+    body: {'senha_nova': senhaNova},
   );
 }

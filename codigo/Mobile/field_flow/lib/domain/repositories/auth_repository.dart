@@ -23,5 +23,5 @@ abstract class AuthRepository {
 
   Future<Usuario> me();
 
-  Future<void> trocarSenha(String senhaAtual, String senhaNova);
+  Future<void> trocarSenha(String senhaNova);
 }

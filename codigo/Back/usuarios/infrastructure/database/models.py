@@ -27,3 +27,10 @@ class Usuario(Base):
     endereco = Column(String, nullable=True)
     endereco_lat = Column(Float, nullable=True)
     endereco_lng = Column(Float, nullable=True)
+    # Marca d'agua do feed de notificacoes: maior id ja visto pelo usuario.
+    # Uma notificacao e considerada lida quando seu id <= este valor. Como a
+    # tabela `notificacoes` e um log global (uma linha pode pertencer a varios
+    # usuarios), o estado de leitura mora aqui, por usuario.
+    notificacoes_lidas_ate_id = Column(
+        Integer, nullable=False, server_default="0", default=0
+    )

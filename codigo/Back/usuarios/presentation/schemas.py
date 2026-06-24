@@ -45,7 +45,7 @@ class UsuarioUpdate(BaseModel):
     endereco_lat: Optional[float] = None
     endereco_lng: Optional[float] = None
     # Campos sensiveis (senha, tipo, ativo) NAO entram aqui:
-    # - senha: fluxo proprio em PUT /auth/me/senha (exige senha atual)
+    # - senha: fluxo proprio em PUT /auth/me/senha (so a nova senha)
     # - tipo: definido no cadastro; trocar quebra invariantes (ex.: perfil prestador)
     # - ativo: desativacao via DELETE /usuarios/{id}
 

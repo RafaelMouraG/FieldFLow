@@ -36,10 +36,9 @@ class ObterUsuarioLogado {
   Future<Usuario> call() => _repo.me();
 }
 
-/// Troca a senha do usuario logado (exige a atual).
+/// Troca a senha do usuario logado (basta a nova senha).
 class TrocarSenha {
   TrocarSenha(this._repo);
   final AuthRepository _repo;
-  Future<void> call(String senhaAtual, String senhaNova) =>
-      _repo.trocarSenha(senhaAtual, senhaNova);
+  Future<void> call(String senhaNova) => _repo.trocarSenha(senhaNova);
 }

@@ -11,5 +11,7 @@ class NotificacaoResponse(BaseModel):
     routing_key: str
     payload: dict[str, Any]
     criado_em: datetime
+    # Calculada por usuario em listar_para_usuario (id <= marca d'agua).
+    lida: bool = False
 
     model_config = ConfigDict(from_attributes=True)

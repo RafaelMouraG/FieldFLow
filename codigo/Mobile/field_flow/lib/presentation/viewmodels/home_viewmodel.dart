@@ -53,8 +53,10 @@ class HomeViewModel extends ChangeNotifier {
     try {
       _demandas = await _auth.listarDemandas();
       // O feed de notificacoes e secundario: se falhar, nao derruba a Home.
+      // O badge conta apenas as nao lidas (visualizar na tela zera a contagem).
       try {
-        _notificacoes = (await _auth.listarNotificacoes()).length;
+        final lista = await _auth.listarNotificacoes();
+        _notificacoes = lista.where((n) => !n.lida).length;
       } catch (_) {}
       _erro = null;
     } on ApiException catch (e) {

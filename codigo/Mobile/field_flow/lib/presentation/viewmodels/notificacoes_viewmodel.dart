@@ -35,6 +35,11 @@ class NotificacoesViewModel extends ChangeNotifier {
     try {
       _itens = await _auth.listarNotificacoes();
       _erro = null;
+      // Abrir/atualizar a tela = visualizar: marca como lidas no backend para
+      // zerar o badge da Home. Best-effort — nao atrapalha a exibicao do feed.
+      try {
+        await _auth.marcarNotificacoesLidas();
+      } catch (_) {}
     } on ApiException catch (e) {
       if (e.isUnauthorized) {
         await _auth.logout();

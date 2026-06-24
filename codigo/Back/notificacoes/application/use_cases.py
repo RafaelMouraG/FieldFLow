@@ -24,6 +24,27 @@ def listar_para_usuario(
             db, usuario.id
         )
     demanda_ids = [d.id for d in demandas]
-    return repository.get_para_usuario(
+    notificacoes = repository.get_para_usuario(
         db, usuario.id, demanda_ids, limit=limit
     )
+    marca = usuario.notificacoes_lidas_ate_id or 0
+    for n in notificacoes:
+        # Atributo transitorio (nao mapeado) lido pelo NotificacaoResponse.
+        n.lida = n.id <= marca
+    return notificacoes
+
+
+def marcar_lidas(db: Session, usuario: Usuario) -> None:
+    """Avanca a marca d'agua do usuario para o topo do seu feed.
+
+    Marca como lidas todas as notificacoes que o usuario ja consegue ver
+    (abrir a tela = visualizar tudo). Nunca recua a marca.
+    """
+    feed = listar_para_usuario(db, usuario)
+    if not feed:
+        return
+    maior_id = max(n.id for n in feed)
+    if maior_id > (usuario.notificacoes_lidas_ate_id or 0):
+        usuario.notificacoes_lidas_ate_id = maior_id
+        db.add(usuario)
+        db.commit()

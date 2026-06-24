@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from auth.application.use_cases import (
     CredenciaisInvalidasError,
     EmailJaCadastradoError,
-    SenhaAtualIncorretaError,
     authenticate,
     change_password,
     register,
@@ -67,7 +66,4 @@ def trocar_senha(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
-    try:
-        change_password(db, current_user, payload.senha_atual, payload.senha_nova)
-    except SenhaAtualIncorretaError:
-        raise HTTPException(status_code=400, detail="Senha atual incorreta")
+    change_password(db, current_user, payload.senha_nova)

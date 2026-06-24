@@ -34,6 +34,11 @@ class DemandaDetailViewModel extends ChangeNotifier {
   bool _carregando = true;
   bool get carregando => _carregando;
 
+  // True apenas durante um refresh de polling (silencioso) em andamento, para
+  // o badge "atualizando" piscar so enquanto busca, em vez de girar sempre.
+  bool _atualizando = false;
+  bool get atualizando => _atualizando;
+
   String? _erro;
   String? get erro => _erro;
 
@@ -73,10 +78,12 @@ class DemandaDetailViewModel extends ChangeNotifier {
   }
 
   Future<void> carregar({bool silencioso = false}) async {
-    if (!silencioso) {
+    if (silencioso) {
+      _atualizando = true;
+    } else {
       _carregando = true;
-      notifyListeners();
     }
+    notifyListeners();
     try {
       final demanda = await _auth.obterDemanda(demandaId);
       final candidaturas = await _auth.listarCandidaturas(demandaId);
@@ -107,6 +114,7 @@ class DemandaDetailViewModel extends ChangeNotifier {
       if (!silencioso) _erro = e.message;
     } finally {
       _carregando = false;
+      _atualizando = false;
       notifyListeners();
     }
   }

@@ -14,4 +14,7 @@ class NotificacaoRemoteDataSource {
         .map((e) => NotificacaoModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  /// POST /notificacoes/marcar-lidas — marca o feed como visto (204 sem corpo).
+  Future<void> marcarLidas() => _client.post('/notificacoes/marcar-lidas');
 }

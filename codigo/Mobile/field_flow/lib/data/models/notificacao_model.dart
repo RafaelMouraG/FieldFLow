@@ -10,5 +10,6 @@ class NotificacaoModel {
     routingKey: json['routing_key'] as String,
     payload: (json['payload'] as Map?)?.cast<String, dynamic>() ?? const {},
     criadoEm: DateTime.parse(json['criado_em'] as String),
+    lida: json['lida'] as bool? ?? false,
   );
 }

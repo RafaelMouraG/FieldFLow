@@ -32,6 +32,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Usuario> me() => _remote.me();
 
   @override
-  Future<void> trocarSenha(String senhaAtual, String senhaNova) =>
-      _remote.trocarSenha(senhaAtual, senhaNova);
+  Future<void> trocarSenha(String senhaNova) =>
+      _remote.trocarSenha(senhaNova);
 }

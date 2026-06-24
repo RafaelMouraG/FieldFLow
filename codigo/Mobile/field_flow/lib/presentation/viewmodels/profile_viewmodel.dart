@@ -64,11 +64,11 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   /// Troca a senha. Retorna `null` em sucesso ou a msg de erro.
-  Future<String?> trocarSenha(String atual, String nova) async {
+  Future<String?> trocarSenha(String nova) async {
     _trocandoSenha = true;
     notifyListeners();
     try {
-      await _auth.trocarSenha(atual, nova);
+      await _auth.trocarSenha(nova);
       return null;
     } on ApiException catch (e) {
       return e.message;

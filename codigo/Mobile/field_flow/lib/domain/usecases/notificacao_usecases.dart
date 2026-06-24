@@ -7,3 +7,10 @@ class ListarNotificacoes {
   final NotificacaoRepository _repo;
   Future<List<Notificacao>> call() => _repo.listar();
 }
+
+/// Marca o feed de notificacoes do usuario como visualizado.
+class MarcarNotificacoesLidas {
+  MarcarNotificacoesLidas(this._repo);
+  final NotificacaoRepository _repo;
+  Future<void> call() => _repo.marcarLidas();
+}

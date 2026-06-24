@@ -97,6 +97,8 @@ class AuthController extends ChangeNotifier {
       ObterPerfilPrestador(_prestadorRepo);
   ListarNotificacoes get listarNotificacoes =>
       ListarNotificacoes(_notificacaoRepo);
+  MarcarNotificacoesLidas get marcarNotificacoesLidas =>
+      MarcarNotificacoesLidas(_notificacaoRepo);
 
   // --- Acoes de sessao (mutam token/usuario), implementadas via use cases.
 
@@ -168,9 +170,9 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Troca a senha (exige a atual). Nao mexe na sessao/token.
-  Future<void> trocarSenha(String senhaAtual, String senhaNova) =>
-      TrocarSenha(_authRepo)(senhaAtual, senhaNova);
+  /// Troca a senha (basta a nova). Nao mexe na sessao/token.
+  Future<void> trocarSenha(String senhaNova) =>
+      TrocarSenha(_authRepo)(senhaNova);
 
   Future<void> logout() async {
     await _limpar();

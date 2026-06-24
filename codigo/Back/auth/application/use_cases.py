@@ -18,10 +18,6 @@ class EmailJaCadastradoError(Exception):
     pass
 
 
-class SenhaAtualIncorretaError(Exception):
-    pass
-
-
 def register(
     db: Session, payload: UsuarioCreate, publisher: EventPublisher
 ) -> tuple[Usuario, str]:
@@ -43,11 +39,7 @@ def authenticate(db: Session, email: str, senha: str) -> tuple[Usuario, str]:
     return usuario, _build_token(usuario)
 
 
-def change_password(
-    db: Session, usuario: Usuario, senha_atual: str, senha_nova: str
-) -> None:
-    if not verify_password(senha_atual, usuario.senha_hash):
-        raise SenhaAtualIncorretaError()
+def change_password(db: Session, usuario: Usuario, senha_nova: str) -> None:
     usuario.senha_hash = hash_password(senha_nova)
     db.add(usuario)
     db.commit()

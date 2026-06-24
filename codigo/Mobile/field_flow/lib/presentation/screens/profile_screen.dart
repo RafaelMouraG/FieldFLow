@@ -34,7 +34,6 @@ class _ProfileViewState extends State<_ProfileView> {
   late final TextEditingController _nome;
   late final TextEditingController _email;
   late final TextEditingController _telefone;
-  final _senhaAtual = TextEditingController();
   final _senhaNova = TextEditingController();
 
   @override
@@ -51,7 +50,6 @@ class _ProfileViewState extends State<_ProfileView> {
     _nome.dispose();
     _email.dispose();
     _telefone.dispose();
-    _senhaAtual.dispose();
     _senhaNova.dispose();
     super.dispose();
   }
@@ -111,9 +109,8 @@ class _ProfileViewState extends State<_ProfileView> {
   Future<void> _trocarSenha() async {
     if (!_formSenha.currentState!.validate()) return;
     final vm = context.read<ProfileViewModel>();
-    final erro = await vm.trocarSenha(_senhaAtual.text, _senhaNova.text);
+    final erro = await vm.trocarSenha(_senhaNova.text);
     if (erro == null) {
-      _senhaAtual.clear();
       _senhaNova.clear();
     }
     _aviso(erro ?? 'Senha alterada!', erro: erro != null);
@@ -226,15 +223,6 @@ class _ProfileViewState extends State<_ProfileView> {
                 const Text(
                   'Trocar senha',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _senhaAtual,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Senha atual'),
-                  validator: (v) => (v == null || v.length < 6)
-                      ? 'Minimo 6 caracteres'
-                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

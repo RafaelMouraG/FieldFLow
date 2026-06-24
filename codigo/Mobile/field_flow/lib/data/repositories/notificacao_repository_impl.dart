@@ -9,4 +9,7 @@ class NotificacaoRepositoryImpl implements NotificacaoRepository {
 
   @override
   Future<List<Notificacao>> listar() => _remote.listar();
+
+  @override
+  Future<void> marcarLidas() => _remote.marcarLidas();
 }

@@ -444,26 +444,32 @@ class _Linha extends StatelessWidget {
   }
 }
 
-/// Indica visualmente que a tela atualiza sozinha (polling).
+/// Indica que a tela atualiza sozinha (polling). O spinner so aparece enquanto
+/// um refresh esta de fato em andamento; no restante mostra um icone estatico.
 class _PollingBadge extends StatelessWidget {
   const _PollingBadge();
 
   @override
   Widget build(BuildContext context) {
+    final atualizando = context.select<DemandaDetailViewModel, bool>(
+      (vm) => vm.atualizando,
+    );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           width: 12,
           height: 12,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Colors.grey.shade400,
-          ),
+          child: atualizando
+              ? CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.grey.shade400,
+                )
+              : Icon(Icons.autorenew, size: 12, color: Colors.grey.shade400),
         ),
         const SizedBox(width: 6),
         Text(
-          'atualizando',
+          atualizando ? 'atualizando' : 'atualiza automaticamente',
           style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
         ),
       ],

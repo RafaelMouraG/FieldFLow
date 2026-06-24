@@ -71,15 +71,35 @@ class _NotificacoesView extends StatelessWidget {
       itemBuilder: (_, i) {
         final n = vm.itens[i];
         return ListTile(
+          // Nao lidas ficam destacadas com um leve realce de fundo.
+          tileColor: n.lida ? null : Colors.blue.withValues(alpha: 0.06),
           leading: CircleAvatar(child: Icon(_icone(n))),
           title: Text(
             n.titulo,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontWeight: n.lida ? FontWeight.w500 : FontWeight.w700,
+            ),
           ),
           subtitle: Text(n.descricao),
-          trailing: Text(
-            Fmt.dataHora(n.criadoEm),
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!n.lida)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Text(
+                Fmt.dataHora(n.criadoEm),
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              ),
+            ],
           ),
         );
       },

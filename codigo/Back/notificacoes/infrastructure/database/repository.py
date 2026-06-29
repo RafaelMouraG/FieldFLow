@@ -59,6 +59,11 @@ def get_para_usuario(
             p.get("cliente_id") == usuario_id
             or p.get("prestador_id") == usuario_id
             or p.get("demanda_id") in dset
+            # Eventos de demanda (ex.: demanda.criada) trazem o id da demanda na
+            # chave `id`, nao `demanda_id`. Para o prestador isso surfacea uma
+            # nova demanda PENDENTE visivel a ele no feed (notificacao vinda do
+            # evento MOM), e nao apenas via polling da lista.
+            or (n.event_type == "demanda" and p.get("id") in dset)
             or (n.event_type == "usuario" and p.get("id") == usuario_id)
         )
         if pertence:

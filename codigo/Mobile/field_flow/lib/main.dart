@@ -6,6 +6,7 @@ import 'core/config.dart';
 import 'core/theme.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/login_screen.dart';
+import 'presentation/screens/prestador_home_screen.dart';
 import 'state/auth_controller.dart';
 
 Future<void> main() async {
@@ -35,9 +36,11 @@ class FieldFlowApp extends StatelessWidget {
   }
 }
 
-/// Decide a tela inicial conforme a sessao: splash enquanto restaura,
-/// login quando deslogado, Home quando autenticado. Como observa o
-/// [AuthController], a troca login <-> logout e automatica.
+/// Decide a tela inicial conforme a sessao: splash enquanto restaura, login
+/// quando deslogado e, quando autenticado, roteia por papel — Home do prestador
+/// para prestadores e Home do cliente para clientes. Como observa o
+/// [AuthController], as trocas login <-> logout e a escolha de papel sao
+/// automaticas.
 class _AuthGate extends StatelessWidget {
   const _AuthGate();
 
@@ -47,6 +50,9 @@ class _AuthGate extends StatelessWidget {
     if (auth.carregando) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return auth.autenticado ? const HomeScreen() : const LoginScreen();
+    if (!auth.autenticado) return const LoginScreen();
+    return auth.isPrestador
+        ? const PrestadorHomeScreen()
+        : const HomeScreen();
   }
 }

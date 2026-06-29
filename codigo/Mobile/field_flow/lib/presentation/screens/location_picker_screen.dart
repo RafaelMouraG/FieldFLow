@@ -61,7 +61,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Nao foi possivel obter o GPS. Arraste o mapa para marcar o local.',
+              'Não foi possível obter o GPS. Arraste o mapa para marcar o local.',
             ),
           ),
         );
@@ -177,7 +177,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                                   ),
                                 )
                               : const Icon(Icons.gps_fixed, size: 18),
-                          label: const Text('Minha localizacao'),
+                          label: const Text('Minha localização'),
                         ),
                       ],
                     ),
@@ -185,7 +185,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     TextField(
                       controller: _rotulo,
                       decoration: const InputDecoration(
-                        labelText: 'Rotulo do local (ex.: Talhao Norte)',
+                        labelText: 'Rótulo do local (ex.: Talhão Norte)',
                         isDense: true,
                       ),
                     ),

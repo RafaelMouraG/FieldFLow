@@ -52,8 +52,8 @@ class ApiClient {
       res = await request().timeout(_timeout);
     } catch (e) {
       throw ApiException(
-        'Nao foi possivel conectar ao servidor (${Config.baseUrl}). '
-        'Verifique se a API esta no ar e se o endereco esta correto.',
+        'Não foi possível conectar ao servidor (${Config.baseUrl}). '
+        'Verifique se a API está no ar e se o endereço está correto.',
       );
     }
 

@@ -128,7 +128,7 @@ class _PrestadorProfileView extends StatelessWidget {
                     RatingStars(nota: p.notaMedia!, total: p.totalAvaliacoes)
                   else
                     Text(
-                      'Sem avaliacoes ainda',
+                      'Sem avaliações ainda',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -148,7 +148,7 @@ class _PrestadorProfileView extends StatelessWidget {
         if (p.anosExperiencia != null)
           _LinhaInfo(
             Icons.workspace_premium_outlined,
-            'Experiencia',
+            'Experiência',
             '${p.anosExperiencia} ano(s)',
           ),
         if (p.cnhCategoria != null && p.cnhCategoria!.isNotEmpty)
@@ -165,17 +165,17 @@ class _PrestadorProfileView extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (p.regioesAtuacao.isNotEmpty) ...[
-          _Secao('Regioes de atuacao'),
+          _Secao('Regiões de atuação'),
           _Chips(p.regioesAtuacao),
           const SizedBox(height: 16),
         ],
         if (p.certificacoes.isNotEmpty) ...[
-          _Secao('Certificacoes'),
+          _Secao('Certificações'),
           _Chips(p.certificacoes),
           const SizedBox(height: 16),
         ],
         if (vm.avaliacoes.isNotEmpty) ...[
-          _Secao('Avaliacoes (${vm.avaliacoes.length})'),
+          _Secao('Avaliações (${vm.avaliacoes.length})'),
           ...vm.avaliacoes.map(
             (a) => Padding(
               padding: const EdgeInsets.only(bottom: 12),

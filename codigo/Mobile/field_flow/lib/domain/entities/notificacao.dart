@@ -27,14 +27,14 @@ class Notificacao {
     'candidatura.aceita' => 'Proposta aceita',
     'candidatura.rejeitada' => 'Proposta recusada',
     'candidatura.cancelada' => 'Proposta cancelada',
-    'demanda.criada' => 'Solicitacao criada',
-    'demanda.atualizada' => 'Solicitacao atualizada',
-    'demanda.removida' => 'Solicitacao removida',
-    'demanda.status.aceito' => 'Solicitacao aceita',
-    'demanda.status.em_execucao' => 'Servico iniciado',
-    'demanda.status.concluido' => 'Servico concluido',
-    'avaliacao.criada' => 'Avaliacao registrada',
-    _ => 'Atualizacao',
+    'demanda.criada' => 'Solicitação criada',
+    'demanda.atualizada' => 'Solicitação atualizada',
+    'demanda.removida' => 'Solicitação removida',
+    'demanda.status.aceito' => 'Solicitação aceita',
+    'demanda.status.em_execucao' => 'Serviço iniciado',
+    'demanda.status.concluido' => 'Serviço concluído',
+    'avaliacao.criada' => 'Avaliação registrada',
+    _ => 'Atualização',
   };
 
   /// Detalhe legivel a partir do payload, quando houver titulo da demanda.

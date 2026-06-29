@@ -78,7 +78,7 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       erro == null
-          ? const SnackBar(content: Text('Servico marcado como concluido!'))
+          ? const SnackBar(content: Text('Serviço marcado como concluído!'))
           : SnackBar(content: Text(erro), backgroundColor: Colors.red.shade700),
     );
   }
@@ -93,7 +93,7 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       erro == null
-          ? const SnackBar(content: Text('Avaliacao enviada. Obrigado!'))
+          ? const SnackBar(content: Text('Avaliação enviada. Obrigado!'))
           : SnackBar(content: Text(erro), backgroundColor: Colors.red.shade700),
     );
   }
@@ -115,7 +115,7 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
   Widget build(BuildContext context) {
     final vm = context.watch<DemandaDetailViewModel>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalhes da solicitacao')),
+      appBar: AppBar(title: const Text('Detalhes da solicitação')),
       body: _buildBody(vm),
     );
   }
@@ -201,7 +201,7 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
     if (status == DemandaStatus.aceito) {
       return const _AvisoStatus(
         icone: Icons.schedule,
-        texto: 'Proposta aceita. Aguardando o prestador iniciar o servico.',
+        texto: 'Proposta aceita. Aguardando o prestador iniciar o serviço.',
       );
     }
     if (status == DemandaStatus.emExecucao) {
@@ -219,7 +219,7 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
                   )
                 : const Icon(Icons.check_circle_outline),
             label: Text(
-              vm.concluindo ? 'Concluindo...' : 'Marcar como concluido',
+              vm.concluindo ? 'Concluindo...' : 'Marcar como concluído',
             ),
           ),
         ),
@@ -243,7 +243,7 @@ class _DemandaDetailViewState extends State<_DemandaDetailView> {
                 Row(
                   children: [
                     const Text(
-                      'Sua avaliacao:  ',
+                      'Sua avaliação:  ',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     RatingStars(nota: a.nota.toDouble()),
@@ -308,7 +308,7 @@ class _AvaliacaoDialogState extends State<_AvaliacaoDialog> {
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
-              labelText: 'Comentario (opcional)',
+              labelText: 'Comentário (opcional)',
               alignLabelWithHint: true,
             ),
           ),
@@ -394,7 +394,7 @@ class _Cabecalho extends StatelessWidget {
           _Linha(Icons.location_on_outlined, 'Origem', d.origem),
           if (d.destino != null && d.destino!.isNotEmpty)
             _Linha(Icons.flag_outlined, 'Destino', d.destino!),
-          _Linha(Icons.crop_outlined, 'Area', Fmt.area(d.areaHectares)),
+          _Linha(Icons.crop_outlined, 'Área', Fmt.area(d.areaHectares)),
           _Linha(
             Icons.payments_outlined,
             'Pagamento',

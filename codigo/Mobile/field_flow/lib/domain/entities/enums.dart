@@ -25,8 +25,8 @@ enum TipoDocumento {
 enum DemandaStatus {
   pendente('PENDENTE', 'Pendente'),
   aceito('ACEITO', 'Aceito'),
-  emExecucao('EM_EXECUCAO', 'Em execucao'),
-  concluido('CONCLUIDO', 'Concluido');
+  emExecucao('EM_EXECUCAO', 'Em execução'),
+  concluido('CONCLUIDO', 'Concluído');
 
   const DemandaStatus(this.wire, this.label);
   final String wire;

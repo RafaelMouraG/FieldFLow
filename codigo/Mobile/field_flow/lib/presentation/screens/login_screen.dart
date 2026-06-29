@@ -83,7 +83,7 @@ class _LoginViewState extends State<_LoginView> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Marketplace de servicos agricolas',
+                      'Marketplace de serviços agrícolas',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
@@ -97,7 +97,7 @@ class _LoginViewState extends State<_LoginView> {
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                       validator: (v) => (v == null || !v.contains('@'))
-                          ? 'Informe um e-mail valido'
+                          ? 'Informe um e-mail válido'
                           : null,
                     ),
                     const SizedBox(height: 16),
@@ -118,7 +118,7 @@ class _LoginViewState extends State<_LoginView> {
                         ),
                       ),
                       validator: (v) => (v == null || v.length < 6)
-                          ? 'Minimo de 6 caracteres'
+                          ? 'Mínimo de 6 caracteres'
                           : null,
                     ),
                     const SizedBox(height: 24),
@@ -144,7 +144,7 @@ class _LoginViewState extends State<_LoginView> {
                                 builder: (_) => const RegisterScreen(),
                               ),
                             ),
-                      child: const Text('Criar conta de cliente'),
+                      child: const Text('Criar conta'),
                     ),
                     const Divider(height: 32),
                     const _ServidorTile(),

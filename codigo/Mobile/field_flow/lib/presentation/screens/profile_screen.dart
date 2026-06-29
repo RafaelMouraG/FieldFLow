@@ -89,13 +89,13 @@ class _ProfileViewState extends State<_ProfileView> {
         builder: (_) => LocationPickerScreen(
           inicial: inicial,
           rotuloInicial: u?.endereco,
-          titulo: 'Endereco da fazenda',
+          titulo: 'Endereço da fazenda',
         ),
       ),
     );
     if (r == null) return;
     if (r.rotulo.isEmpty) {
-      _aviso('Informe um rotulo/endereco para a fazenda.', erro: true);
+      _aviso('Informe um rótulo/endereço para a fazenda.', erro: true);
       return;
     }
     final erro = await vm.salvarEndereco(
@@ -103,7 +103,7 @@ class _ProfileViewState extends State<_ProfileView> {
       lat: r.lat,
       lng: r.lng,
     );
-    _aviso(erro ?? 'Endereco da fazenda salvo!', erro: erro != null);
+    _aviso(erro ?? 'Endereço da fazenda salvo!', erro: erro != null);
   }
 
   Future<void> _trocarSenha() async {
@@ -146,7 +146,7 @@ class _ProfileViewState extends State<_ProfileView> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'E-mail'),
                   validator: (v) => (v == null || !v.contains('@'))
-                      ? 'E-mail invalido'
+                      ? 'E-mail inválido'
                       : null,
                 ),
                 const SizedBox(height: 12),
@@ -171,13 +171,13 @@ class _ProfileViewState extends State<_ProfileView> {
           if (vm.usuario?.ehCnpj ?? false) ...[
             const Divider(height: 40),
             const Text(
-              'Endereco da fazenda',
+              'Endereço da fazenda',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              'Disponivel para clientes CNPJ. Serve de referencia e pre-centra '
-              'o mapa ao criar uma solicitacao.',
+              'Disponível para clientes CNPJ. Serve de referência e pré-centra '
+              'o mapa ao criar uma solicitação.',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 12),
@@ -187,7 +187,7 @@ class _ProfileViewState extends State<_ProfileView> {
                 title: Text(
                   (vm.usuario?.endereco?.isNotEmpty ?? false)
                       ? vm.usuario!.endereco!
-                      : 'Nenhum endereco definido',
+                      : 'Nenhum endereço definido',
                 ),
                 subtitle: (vm.usuario?.enderecoLat != null)
                     ? Text(
@@ -208,8 +208,8 @@ class _ProfileViewState extends State<_ProfileView> {
                   vm.salvandoEndereco
                       ? 'Salvando...'
                       : (vm.usuario?.endereco?.isNotEmpty ?? false)
-                      ? 'Atualizar endereco no mapa'
-                      : 'Definir endereco no mapa',
+                      ? 'Atualizar endereço no mapa'
+                      : 'Definir endereço no mapa',
                 ),
               ),
             ),
@@ -230,7 +230,7 @@ class _ProfileViewState extends State<_ProfileView> {
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Nova senha'),
                   validator: (v) => (v == null || v.length < 6)
-                      ? 'Minimo 6 caracteres'
+                      ? 'Mínimo 6 caracteres'
                       : null,
                 ),
                 const SizedBox(height: 16),

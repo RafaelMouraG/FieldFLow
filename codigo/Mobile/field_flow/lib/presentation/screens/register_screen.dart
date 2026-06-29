@@ -75,6 +75,30 @@ class _RegisterViewState extends State<_RegisterView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                SegmentedButton<TipoUsuario>(
+                  segments: const [
+                    ButtonSegment(
+                      value: TipoUsuario.cliente,
+                      label: Text('Cliente'),
+                      icon: Icon(Icons.agriculture),
+                    ),
+                    ButtonSegment(
+                      value: TipoUsuario.prestador,
+                      label: Text('Prestador'),
+                      icon: Icon(Icons.handyman),
+                    ),
+                  ],
+                  selected: {vm.tipoUsuario},
+                  onSelectionChanged: (s) => vm.setTipoUsuario(s.first),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  vm.isPrestador
+                      ? 'Receba solicitações, candidate-se e execute serviços.'
+                      : 'Crie solicitações e contrate prestadores.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _nome,
                   textCapitalization: TextCapitalization.words,
@@ -89,7 +113,7 @@ class _RegisterViewState extends State<_RegisterView> {
                   autocorrect: false,
                   decoration: const InputDecoration(labelText: 'E-mail'),
                   validator: (v) => (v == null || !v.contains('@'))
-                      ? 'E-mail invalido'
+                      ? 'E-mail inválido'
                       : null,
                 ),
                 const SizedBox(height: 16),
@@ -101,50 +125,67 @@ class _RegisterViewState extends State<_RegisterView> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: DropdownButtonFormField<TipoDocumento>(
-                        initialValue: vm.tipoDoc,
-                        decoration: const InputDecoration(
-                          labelText: 'Documento',
+                if (vm.isPrestador)
+                  // Prestador e sempre pessoa fisica: documento fixo em CPF.
+                  TextFormField(
+                    controller: _documento,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'CPF'),
+                    validator: (v) {
+                      final d = (v ?? '').replaceAll(RegExp(r'\D'), '');
+                      return d.length != vm.digitosEsperados
+                          ? 'CPF deve ter ${vm.digitosEsperados} digitos'
+                          : null;
+                    },
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: DropdownButtonFormField<TipoDocumento>(
+                          initialValue: vm.tipoDoc,
+                          decoration: const InputDecoration(
+                            labelText: 'Documento',
+                          ),
+                          items: TipoDocumento.values
+                              .map(
+                                (t) => DropdownMenuItem(
+                                  value: t,
+                                  child: Text(t.wire),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) =>
+                              vm.setTipoDoc(v ?? TipoDocumento.cpf),
                         ),
-                        items: TipoDocumento.values
-                            .map(
-                              (t) => DropdownMenuItem(
-                                value: t,
-                                child: Text(t.wire),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (v) => vm.setTipoDoc(v ?? TipoDocumento.cpf),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 3,
-                      child: TextFormField(
-                        controller: _documento,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: vm.tipoDoc.wire),
-                        validator: (v) {
-                          final d = (v ?? '').replaceAll(RegExp(r'\D'), '');
-                          return d.length != vm.digitosEsperados
-                              ? '${vm.tipoDoc.wire} deve ter ${vm.digitosEsperados} digitos'
-                              : null;
-                        },
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 3,
+                        child: TextFormField(
+                          controller: _documento,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: vm.tipoDoc.wire,
+                          ),
+                          validator: (v) {
+                            final d = (v ?? '').replaceAll(RegExp(r'\D'), '');
+                            return d.length != vm.digitosEsperados
+                                ? '${vm.tipoDoc.wire} deve ter ${vm.digitosEsperados} digitos'
+                                : null;
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _senha,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Senha'),
                   validator: (v) => (v == null || v.length < 6)
-                      ? 'Minimo de 6 caracteres'
+                      ? 'Mínimo de 6 caracteres'
                       : null,
                 ),
                 const SizedBox(height: 24),

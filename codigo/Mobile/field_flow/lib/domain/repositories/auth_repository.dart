@@ -21,6 +21,15 @@ abstract class AuthRepository {
     String? telefone,
   });
 
+  Future<AuthResult> registerPrestador({
+    required String nome,
+    required String email,
+    required String senha,
+    required String tipoDocumento,
+    required String documento,
+    String? telefone,
+  });
+
   Future<Usuario> me();
 
   Future<void> trocarSenha(String senhaNova);

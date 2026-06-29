@@ -24,6 +24,44 @@ class AuthRemoteDataSource {
     required String tipoDocumento,
     required String documento,
     String? telefone,
+  }) => _register(
+    nome: nome,
+    email: email,
+    senha: senha,
+    tipoDocumento: tipoDocumento,
+    documento: documento,
+    tipo: 'CLIENTE',
+    telefone: telefone,
+  );
+
+  /// Cadastra um prestador e ja retorna o token. O backend cria o perfil
+  /// profissional como INCOMPLETO; o prestador o completa depois para aprovacao.
+  Future<AuthResult> registerPrestador({
+    required String nome,
+    required String email,
+    required String senha,
+    required String tipoDocumento,
+    required String documento,
+    String? telefone,
+  }) => _register(
+    nome: nome,
+    email: email,
+    senha: senha,
+    tipoDocumento: tipoDocumento,
+    documento: documento,
+    tipo: 'PRESTADOR',
+    telefone: telefone,
+  );
+
+  /// POST /auth/register — cadastra um usuario do [tipo] dado e ja autentica.
+  Future<AuthResult> _register({
+    required String nome,
+    required String email,
+    required String senha,
+    required String tipoDocumento,
+    required String documento,
+    required String tipo,
+    String? telefone,
   }) async {
     final res =
         await _client.post(
@@ -34,7 +72,7 @@ class AuthRemoteDataSource {
                 'senha': senha,
                 'tipo_documento': tipoDocumento,
                 'documento': documento,
-                'tipo': 'CLIENTE',
+                'tipo': tipo,
                 if (telefone != null && telefone.isNotEmpty)
                   'telefone': telefone,
               },

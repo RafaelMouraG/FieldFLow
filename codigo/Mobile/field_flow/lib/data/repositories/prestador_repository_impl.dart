@@ -9,4 +9,26 @@ class PrestadorRepositoryImpl implements PrestadorRepository {
 
   @override
   Future<PerfilPrestador> perfil(int usuarioId) => _remote.perfil(usuarioId);
+
+  @override
+  Future<PerfilPrestador> meuPerfil() => _remote.meuPerfil();
+
+  @override
+  Future<PerfilPrestador> enviarPerfil({
+    String? bio,
+    required int anosExperiencia,
+    List<String> especialidades = const [],
+    List<String> certificacoes = const [],
+    String? cnhCategoria,
+    List<String> regioesAtuacao = const [],
+    List<String> equipamentosProprios = const [],
+  }) => _remote.enviarPerfil(
+    bio: bio,
+    anosExperiencia: anosExperiencia,
+    especialidades: especialidades,
+    certificacoes: certificacoes,
+    cnhCategoria: cnhCategoria,
+    regioesAtuacao: regioesAtuacao,
+    equipamentosProprios: equipamentosProprios,
+  );
 }

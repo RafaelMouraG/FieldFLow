@@ -29,6 +29,23 @@ class AuthRepositoryImpl implements AuthRepository {
   );
 
   @override
+  Future<AuthResult> registerPrestador({
+    required String nome,
+    required String email,
+    required String senha,
+    required String tipoDocumento,
+    required String documento,
+    String? telefone,
+  }) => _remote.registerPrestador(
+    nome: nome,
+    email: email,
+    senha: senha,
+    tipoDocumento: tipoDocumento,
+    documento: documento,
+    telefone: telefone,
+  );
+
+  @override
   Future<Usuario> me() => _remote.me();
 
   @override

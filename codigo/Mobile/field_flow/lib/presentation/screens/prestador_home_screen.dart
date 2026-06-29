@@ -2,33 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../state/auth_controller.dart';
-import '../viewmodels/home_viewmodel.dart';
-import 'demanda_form_screen.dart';
-import 'demanda_list_screen.dart';
+import '../viewmodels/prestador_home_viewmodel.dart';
+import 'demandas_disponiveis_screen.dart';
+import 'minhas_candidaturas_screen.dart';
 import 'notificacoes_screen.dart';
+import 'prestador_perfil_form_screen.dart';
 import 'profile_screen.dart';
 
-/// TELA inicial — Home/dashboard do cliente.
+/// TELA inicial do prestador — Home/dashboard.
 ///
-/// View-only: observa o [HomeViewModel], que agrega as demandas em contadores
-/// por status e atualiza por polling.
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+/// View-only: observa o [PrestadorHomeViewModel], que agrega as demandas
+/// disponiveis, candidaturas e servicos em andamento e atualiza por polling.
+class PrestadorHomeScreen extends StatelessWidget {
+  const PrestadorHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => HomeViewModel(context.read<AuthController>()),
-      child: const _HomeView(),
+      create: (_) => PrestadorHomeViewModel(context.read<AuthController>()),
+      child: const _PrestadorHomeView(),
     );
   }
 }
 
-class _HomeView extends StatelessWidget {
-  const _HomeView();
+class _PrestadorHomeView extends StatelessWidget {
+  const _PrestadorHomeView();
 
   void _abrir(BuildContext context, Widget tela) {
-    final vm = context.read<HomeViewModel>();
+    final vm = context.read<PrestadorHomeViewModel>();
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => tela)).then((_) => vm.carregar());
@@ -36,11 +37,11 @@ class _HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<HomeViewModel>();
+    final vm = context.watch<PrestadorHomeViewModel>();
     final usuario = context.watch<AuthController>().usuario;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FieldFlow'),
+        title: const Text('FieldFlow • Prestador'),
         actions: [
           _SinoNotificacoes(
             quantidade: vm.notificacoes,
@@ -59,9 +60,9 @@ class _HomeView extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _abrir(context, const DemandaFormScreen()),
-        icon: const Icon(Icons.add),
-        label: const Text('Nova solicitação'),
+        onPressed: () => _abrir(context, const DemandasDisponiveisScreen()),
+        icon: const Icon(Icons.search),
+        label: const Text('Buscar serviços'),
       ),
       body: RefreshIndicator(
         onRefresh: vm.carregar,
@@ -69,25 +70,49 @@ class _HomeView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
           children: [
             Text(
-              'Ola, ${usuario?.nome ?? 'produtor'}',
+              'Ola, ${usuario?.nome ?? 'prestador'}',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              'Acompanhe suas solicitações de serviço',
+              'Encontre solicitações e acompanhe seus serviços',
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 20),
-            if (vm.erro != null && vm.total == 0)
+            if (!vm.carregando && !vm.perfilAprovado)
+              _PerfilPendenteCard(
+                perfilStatus: vm.perfil?.status,
+                onTap: () =>
+                    _abrir(context, const PrestadorPerfilFormScreen()),
+              ),
+            if (vm.erro != null && vm.disponiveis == 0)
               _ErroCard(mensagem: vm.erro!, onRetry: vm.carregar)
             else
               _Resumo(vm: vm),
             const SizedBox(height: 20),
             _AcaoTile(
-              icone: Icons.list_alt,
-              titulo: 'Minhas solicitações',
-              subtitulo: 'Ver e gerenciar todas',
-              onTap: () => _abrir(context, const DemandaListScreen()),
+              icone: Icons.search,
+              titulo: 'Solicitações disponíveis',
+              subtitulo: vm.disponiveis > 0
+                  ? '${vm.disponiveis} aberta(s) para candidatura'
+                  : 'Nenhuma no momento',
+              onTap: () => _abrir(context, const DemandasDisponiveisScreen()),
+            ),
+            _AcaoTile(
+              icone: Icons.assignment_turned_in_outlined,
+              titulo: 'Minhas candidaturas',
+              subtitulo: vm.candidaturasPendentes > 0
+                  ? '${vm.candidaturasPendentes} aguardando resposta'
+                  : 'Acompanhe suas propostas e serviços',
+              onTap: () => _abrir(context, const MinhasCandidaturasScreen()),
+            ),
+            _AcaoTile(
+              icone: Icons.badge_outlined,
+              titulo: 'Perfil profissional',
+              subtitulo: vm.perfilAprovado
+                  ? 'Aprovado • editar dados'
+                  : 'Complete para se candidatar',
+              onTap: () => _abrir(context, const PrestadorPerfilFormScreen()),
             ),
             _AcaoTile(
               icone: Icons.notifications_outlined,
@@ -96,12 +121,6 @@ class _HomeView extends StatelessWidget {
                   ? '${vm.notificacoes} evento(s)'
                   : 'Sem novidades',
               onTap: () => _abrir(context, const NotificacoesScreen()),
-            ),
-            _AcaoTile(
-              icone: Icons.person_outline,
-              titulo: 'Meu perfil',
-              subtitulo: 'Editar dados e senha',
-              onTap: () => _abrir(context, const ProfileScreen()),
             ),
           ],
         ),
@@ -112,11 +131,11 @@ class _HomeView extends StatelessWidget {
 
 class _Resumo extends StatelessWidget {
   const _Resumo({required this.vm});
-  final HomeViewModel vm;
+  final PrestadorHomeViewModel vm;
 
   @override
   Widget build(BuildContext context) {
-    if (vm.carregando && vm.total == 0) {
+    if (vm.carregando && vm.disponiveis == 0 && vm.emAndamento == 0) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 32),
         child: Center(child: CircularProgressIndicator()),
@@ -125,24 +144,24 @@ class _Resumo extends StatelessWidget {
     return Row(
       children: [
         _StatCard(
-          rotulo: 'Aguardando',
-          valor: vm.pendentes,
+          rotulo: 'Disponíveis',
+          valor: vm.disponiveis,
           cor: Colors.orange,
-          icone: Icons.hourglass_empty,
+          icone: Icons.search,
+        ),
+        const SizedBox(width: 12),
+        _StatCard(
+          rotulo: 'Candidaturas',
+          valor: vm.candidaturasPendentes,
+          cor: Colors.blue,
+          icone: Icons.assignment_outlined,
         ),
         const SizedBox(width: 12),
         _StatCard(
           rotulo: 'Em andamento',
           valor: vm.emAndamento,
-          cor: Colors.blue,
+          cor: Colors.purple,
           icone: Icons.agriculture_outlined,
-        ),
-        const SizedBox(width: 12),
-        _StatCard(
-          rotulo: 'Concluídas',
-          valor: vm.concluidas,
-          cor: Colors.green,
-          icone: Icons.check_circle_outline,
         ),
       ],
     );
@@ -220,6 +239,39 @@ class _AcaoTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(subtitulo),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// Aviso de perfil ainda nao aprovado (bloqueia candidaturas no backend).
+class _PerfilPendenteCard extends StatelessWidget {
+  const _PerfilPendenteCard({required this.perfilStatus, required this.onTap});
+  final String? perfilStatus;
+  final VoidCallback onTap;
+
+  String get _texto => switch (perfilStatus) {
+    'EM_ANALISE' => 'Seu perfil está em análise. Em breve você poderá se '
+        'candidatar.',
+    'REPROVADO' => 'Seu perfil foi reprovado. Revise e reenvie para se '
+        'candidatar.',
+    _ => 'Complete seu perfil profissional para poder se candidatar.',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      color: Colors.amber.shade50,
+      child: ListTile(
+        leading: const Icon(Icons.info_outline, color: Colors.amber),
+        title: const Text(
+          'Perfil incompleto',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(_texto),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),

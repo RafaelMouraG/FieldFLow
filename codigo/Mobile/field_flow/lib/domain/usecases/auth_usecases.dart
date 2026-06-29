@@ -29,6 +29,27 @@ class RegistrarCliente {
   );
 }
 
+/// Cadastra um prestador (e ja retorna token + usuario).
+class RegistrarPrestador {
+  RegistrarPrestador(this._repo);
+  final AuthRepository _repo;
+  Future<AuthResult> call({
+    required String nome,
+    required String email,
+    required String senha,
+    required String tipoDocumento,
+    required String documento,
+    String? telefone,
+  }) => _repo.registerPrestador(
+    nome: nome,
+    email: email,
+    senha: senha,
+    tipoDocumento: tipoDocumento,
+    documento: documento,
+    telefone: telefone,
+  );
+}
+
 /// Carrega o usuario autenticado (GET /auth/me).
 class ObterUsuarioLogado {
   ObterUsuarioLogado(this._repo);

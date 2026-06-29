@@ -131,7 +131,7 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
   Widget build(BuildContext context) {
     final vm = context.watch<DemandaFormViewModel>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Nova solicitacao')),
+      appBar: AppBar(title: const Text('Nova solicitação')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -144,8 +144,8 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   controller: _titulo,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    labelText: 'Titulo',
-                    hintText: 'Ex.: Pulverizacao de soja',
+                    labelText: 'Título',
+                    hintText: 'Ex.: Pulverização de soja',
                   ),
                   validator: _obrigatorio,
                 ),
@@ -154,8 +154,8 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   controller: _tipoServico,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    labelText: 'Tipo de servico',
-                    hintText: 'Ex.: Pulverizacao, Colheita, Transporte',
+                    labelText: 'Tipo de serviço',
+                    hintText: 'Ex.: Pulverização, Colheita, Transporte',
                   ),
                   validator: _obrigatorio,
                 ),
@@ -165,7 +165,7 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                   maxLines: 3,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    labelText: 'Descricao',
+                    labelText: 'Descrição',
                     alignLabelWithHint: true,
                   ),
                   validator: _obrigatorio,
@@ -212,12 +212,12 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                   ],
                   decoration: const InputDecoration(
-                    labelText: 'Area (hectares)',
+                    labelText: 'Área (hectares)',
                     suffixText: 'ha',
                   ),
                   validator: (v) {
                     final n = _parseNum(v ?? '');
-                    if (n == null || n <= 0) return 'Informe uma area valida';
+                    if (n == null || n <= 0) return 'Informe uma área válida';
                     return null;
                   },
                 ),
@@ -251,7 +251,7 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                     validator: (v) {
                       if (!vm.exigeValor) return null;
                       final n = _parseNum(v ?? '');
-                      if (n == null || n < 0) return 'Informe um valor valido';
+                      if (n == null || n < 0) return 'Informe um valor válido';
                       return null;
                     },
                   ),
@@ -285,7 +285,7 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Publicar solicitacao'),
+                      : const Text('Publicar solicitação'),
                 ),
               ],
             ),
@@ -296,7 +296,7 @@ class _DemandaFormViewState extends State<_DemandaFormView> {
   }
 
   String? _obrigatorio(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Campo obrigatorio' : null;
+      (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null;
 }
 
 /// Botao que abre o mapa e mostra se o local ja foi marcado (com as coords).

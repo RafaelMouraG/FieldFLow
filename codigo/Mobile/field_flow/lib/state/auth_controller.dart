@@ -16,6 +16,7 @@ import '../data/repositories/demanda_repository_impl.dart';
 import '../data/repositories/notificacao_repository_impl.dart';
 import '../data/repositories/prestador_repository_impl.dart';
 import '../data/repositories/usuario_repository_impl.dart';
+import '../domain/entities/enums.dart';
 import '../domain/entities/usuario.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/avaliacao_repository.dart';
@@ -49,6 +50,10 @@ class AuthController extends ChangeNotifier {
   String? get token => _token;
   Usuario? get usuario => _usuario;
   bool get autenticado => _token != null;
+
+  /// `true` quando o usuario logado e um prestador de servicos. Usado pela raiz
+  /// do app para escolher entre o fluxo do cliente e o do prestador.
+  bool get isPrestador => _usuario?.tipo == TipoUsuario.prestador;
 
   /// `true` durante a restauracao da sessao no boot (mostra splash).
   bool get carregando => _carregando;
@@ -84,6 +89,11 @@ class AuthController extends ChangeNotifier {
       ListarCandidaturas(_candidaturaRepo);
   AceitarCandidatura get aceitarCandidatura =>
       AceitarCandidatura(_candidaturaRepo);
+  Candidatar get candidatar => Candidatar(_candidaturaRepo);
+  CancelarCandidatura get cancelarCandidatura =>
+      CancelarCandidatura(_candidaturaRepo);
+  ListarMinhasCandidaturas get listarMinhasCandidaturas =>
+      ListarMinhasCandidaturas(_candidaturaRepo);
 
   CriarAvaliacao get criarAvaliacao => CriarAvaliacao(_avaliacaoRepo);
   ObterAvaliacaoDaDemanda get obterAvaliacaoDaDemanda =>
@@ -95,6 +105,10 @@ class AuthController extends ChangeNotifier {
       ObterUsuarioPublico(_usuarioRepo);
   ObterPerfilPrestador get obterPerfilPrestador =>
       ObterPerfilPrestador(_prestadorRepo);
+  ObterMeuPerfilPrestador get obterMeuPerfilPrestador =>
+      ObterMeuPerfilPrestador(_prestadorRepo);
+  EnviarPerfilPrestador get enviarPerfilPrestador =>
+      EnviarPerfilPrestador(_prestadorRepo);
   ListarNotificacoes get listarNotificacoes =>
       ListarNotificacoes(_notificacaoRepo);
   MarcarNotificacoesLidas get marcarNotificacoesLidas =>
@@ -135,6 +149,27 @@ class AuthController extends ChangeNotifier {
     String? telefone,
   }) async {
     final res = await RegistrarCliente(_authRepo)(
+      nome: nome,
+      email: email,
+      senha: senha,
+      tipoDocumento: tipoDocumento,
+      documento: documento,
+      telefone: telefone,
+    );
+    await _persistir(res.token);
+    _usuario = res.usuario;
+    notifyListeners();
+  }
+
+  Future<void> registrarPrestador({
+    required String nome,
+    required String email,
+    required String senha,
+    required String tipoDocumento,
+    required String documento,
+    String? telefone,
+  }) async {
+    final res = await RegistrarPrestador(_authRepo)(
       nome: nome,
       email: email,
       senha: senha,

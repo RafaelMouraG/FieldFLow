@@ -49,7 +49,7 @@ class _DemandaListView extends StatelessWidget {
     final usuario = context.watch<AuthController>().usuario;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Minhas solicitacoes'),
+        title: const Text('Minhas solicitações'),
         actions: [
           IconButton(
             tooltip: 'Sair',
@@ -76,7 +76,7 @@ class _DemandaListView extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirCriacao(context),
         icon: const Icon(Icons.add),
-        label: const Text('Nova solicitacao'),
+        label: const Text('Nova solicitação'),
       ),
       body: RefreshIndicator(
         onRefresh: vm.carregar,
@@ -116,11 +116,11 @@ class _VazioView extends StatelessWidget {
         const SizedBox(height: 120),
         Icon(Icons.inbox_outlined, size: 72, color: Colors.grey.shade400),
         const SizedBox(height: 12),
-        const Center(child: Text('Nenhuma solicitacao ainda')),
+        const Center(child: Text('Nenhuma solicitação ainda')),
         const SizedBox(height: 4),
         Center(
           child: Text(
-            'Toque em "Nova solicitacao" para comecar',
+            'Toque em "Nova solicitação" para começar',
             style: TextStyle(color: Colors.grey.shade600),
           ),
         ),

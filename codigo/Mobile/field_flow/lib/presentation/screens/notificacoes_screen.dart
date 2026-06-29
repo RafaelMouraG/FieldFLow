@@ -33,7 +33,7 @@ class _NotificacoesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<NotificacoesViewModel>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Notificacoes')),
+      appBar: AppBar(title: const Text('Notificações')),
       body: RefreshIndicator(onRefresh: vm.carregar, child: _buildBody(vm)),
     );
   }
@@ -61,7 +61,7 @@ class _NotificacoesView extends StatelessWidget {
           const SizedBox(height: 120),
           Icon(Icons.notifications_none, size: 72, color: Colors.grey.shade400),
           const SizedBox(height: 12),
-          const Center(child: Text('Nenhuma notificacao ainda')),
+          const Center(child: Text('Nenhuma notificação ainda')),
         ],
       );
     }

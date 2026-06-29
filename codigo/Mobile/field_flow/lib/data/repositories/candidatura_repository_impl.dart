@@ -14,4 +14,22 @@ class CandidaturaRepositoryImpl implements CandidaturaRepository {
   @override
   Future<Candidatura> aceitar(int candidaturaId) =>
       _remote.aceitar(candidaturaId);
+
+  @override
+  Future<Candidatura> candidatar(
+    int demandaId, {
+    String? mensagem,
+    double? valorProposto,
+  }) => _remote.candidatar(
+    demandaId,
+    mensagem: mensagem,
+    valorProposto: valorProposto,
+  );
+
+  @override
+  Future<Candidatura> cancelar(int candidaturaId) =>
+      _remote.cancelar(candidaturaId);
+
+  @override
+  Future<List<Candidatura>> listarMinhas() => _remote.listarMinhas();
 }
